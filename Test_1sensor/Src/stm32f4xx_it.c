@@ -43,7 +43,11 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 extern volatile unsigned int count_pulse, timer2_indicator, timer3_indicator, timer4_indicator,echo_pulse,ext_indicator;
-extern volatile float distance;
+extern volatile unsigned int time_sensor1, time_sensor2, time_sensor3, time_sensor4;
+extern volatile unsigned int echo_sensor1, echo_sensor2, echo_sensor3, echo_sensor4;
+extern volatile unsigned int en_sensor1, en_sensor2, en_sensor3, en_sensor4;
+extern volatile float distance1, distance2, distance3, distance4;
+extern volatile float alpha;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -206,16 +210,15 @@ void SysTick_Handler(void)
 void EXTI3_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI3_IRQn 0 */
-	//tien
 	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_3))
 	{
-		count_pulse=0;
-		HAL_TIM_Base_Start_IT(&htim4);		
+		en_sensor3=1;
+		time_sensor3=0;	
 	}
 	else
 	{
-		echo_pulse=count_pulse;
-		HAL_TIM_Base_Stop_IT(&htim4);	
+		echo_sensor3=time_sensor3;
+		en_sensor3=0;
 	}
 	
   /* USER CODE END EXTI3_IRQn 0 */
@@ -226,12 +229,36 @@ void EXTI3_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles EXTI line4 interrupt.
+  */
+void EXTI4_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI4_IRQn 0 */
+	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4))
+	{
+		en_sensor4=1;
+		time_sensor4=0;		
+	}
+	else
+	{
+		echo_sensor4=time_sensor4;
+		en_sensor4=0;
+	}
+  /* USER CODE END EXTI4_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
+  /* USER CODE BEGIN EXTI4_IRQn 1 */
+
+  /* USER CODE END EXTI4_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM2 global interrupt.
   */
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
 	timer2_indicator++;
+	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_3,GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_4,GPIO_PIN_RESET);
 	HAL_TIM_Base_Stop_IT(&htim2);
   /* USER CODE END TIM2_IRQn 0 */
@@ -249,9 +276,12 @@ void TIM3_IRQHandler(void)
   /* USER CODE BEGIN TIM3_IRQn 0 */
 	timer3_indicator++;
 	timer2_indicator=0;
+	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3,GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4,GPIO_PIN_SET);
 	HAL_TIM_Base_Start_IT(&htim2);
-	distance=echo_pulse*0.0001*340/2;
+	
+	distance3=echo_sensor3*0.0001*340/2;
+	distance4=echo_sensor4*0.0001*340/2;
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */
@@ -265,8 +295,8 @@ void TIM3_IRQHandler(void)
 void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
-	timer4_indicator++;
-	count_pulse++;
+	if (en_sensor3==1) time_sensor3++;
+	if (en_sensor4==1) time_sensor4++;
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */
