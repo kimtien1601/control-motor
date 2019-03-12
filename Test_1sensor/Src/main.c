@@ -54,7 +54,8 @@ volatile unsigned int en_sensor1=0, en_sensor2=0, en_sensor3=0, en_sensor4=0;
 volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 volatile float alpha=0; 
 volatile float current_speed_left=50, current_speed_right=0;
-volatile uint8_t TIM_Period=49;
+unsigned int TIM_Period=399;
+volatile unsigned int t1_indicator=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,15 +67,15 @@ static void MX_TIM4_Init(void);
 static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 //Ham xuat % dong co
-//void SetPWM_withDutyCycle(TIM_HandleTypeDef *htim, uint32_t Channel, int dutyCycle){
+void SetPWM_withDutyCycle(TIM_HandleTypeDef *htim, uint32_t Channel, int dutyCycle){
 
-//	dutyCycle=(dutyCycle > 100 ) ? 100 : dutyCycle;
-//	dutyCycle=(dutyCycle < 0)? 0: dutyCycle;
+	dutyCycle=(dutyCycle > 100 ) ? 100 : dutyCycle;
+	dutyCycle=(dutyCycle < 0)? 0: dutyCycle;
 
-//	/*This function allow to Write PWM in duty cycle with timer and channel parameters*/
-//	int32_t pulse_length = 49*dutyCycle/100;
-//	__HAL_TIM_SET_COMPARE(htim, Channel, pulse_length);
-//};
+	/*This function allow to Write PWM in duty cycle with timer and channel parameters*/
+	int32_t pulse_length = 399*dutyCycle/100;
+	__HAL_TIM_SET_COMPARE(htim, Channel, pulse_length);
+};
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -115,16 +116,20 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_1);
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_TIM_Base_Start_IT(&htim4);
+	
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		
     /* USER CODE END WHILE */
-
+		
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -194,9 +199,9 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 83;
+  htim1.Init.Prescaler = 20;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 49;
+  htim1.Init.Period = 399;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -454,7 +459,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4,GPIO_PIN_SET);
 		HAL_TIM_Base_Start_IT(&htim2);
-		
+		t1_indicator++;
 		//Calculate alpha
 		distance1=echo_sensor1*0.0001*340/2/0.4;
 		distance2=echo_sensor2*0.0001*340/2/0.4;
@@ -463,9 +468,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		
 		alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
 		
-		current_speed_left=current_speed_left+alpha;
-		current_speed_right-=alpha;
-	
+		current_speed_left=current_speed_left+alpha/2;
+		if (current_speed_left>100) current_speed_left=100;
+		if (current_speed_left<0) current_speed_left=0;
+		
+		current_speed_right=current_speed_right-alpha/2;
+		if (current_speed_right>100) current_speed_right=100;
+		if (current_speed_right<0) current_speed_right=0;
+		
+		SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_1,(int)current_speed_left);
 	}
 }
 /* USER CODE END 4 */
