@@ -45,9 +45,9 @@
 extern volatile unsigned int time_sensor1, time_sensor2, time_sensor3, time_sensor4;
 extern volatile unsigned int echo_sensor1, echo_sensor2, echo_sensor3, echo_sensor4;
 extern volatile unsigned int en_sensor1, en_sensor2, en_sensor3, en_sensor4;
-extern volatile float distance1, distance2, distance3, distance4;
-extern volatile float alpha;
-extern volatile float current_speed_left, current_speed_right;
+//extern volatile float distance1, distance2, distance3, distance4;
+//extern volatile float alpha;
+//extern volatile float current_speed_left, current_speed_right;
 extern TIM_HandleTypeDef htim1;
 
 /* USER CODE END PV */

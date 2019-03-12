@@ -53,9 +53,9 @@ volatile unsigned int echo_sensor1=0, echo_sensor2=0, echo_sensor3=0, echo_senso
 volatile unsigned int en_sensor1=0, en_sensor2=0, en_sensor3=0, en_sensor4=0;
 volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 volatile float alpha=0; 
-volatile float current_speed_left=50, current_speed_right=0;
+volatile float current_speed_left=50, current_speed_right=50;
 unsigned int TIM_Period=399;
-volatile unsigned int t1_indicator=0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,11 +69,8 @@ static void MX_TIM1_Init(void);
 //Ham xuat % dong co
 void SetPWM_withDutyCycle(TIM_HandleTypeDef *htim, uint32_t Channel, int dutyCycle){
 
-	dutyCycle=(dutyCycle > 100 ) ? 100 : dutyCycle;
-	dutyCycle=(dutyCycle < 0)? 0: dutyCycle;
-
 	/*This function allow to Write PWM in duty cycle with timer and channel parameters*/
-	int32_t pulse_length = 399*dutyCycle/100;
+	int32_t pulse_length = TIM_Period*dutyCycle/100;
 	__HAL_TIM_SET_COMPARE(htim, Channel, pulse_length);
 };
 /* USER CODE END PFP */
@@ -117,10 +114,10 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_2);
 	HAL_TIM_Base_Start_IT(&htim3);
-	HAL_TIM_Base_Start_IT(&htim4);
+	HAL_TIM_Base_Start_IT(&htim4);	
 	
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -459,7 +456,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4,GPIO_PIN_SET);
 		HAL_TIM_Base_Start_IT(&htim2);
-		t1_indicator++;
+
 		//Calculate alpha
 		distance1=echo_sensor1*0.0001*340/2/0.4;
 		distance2=echo_sensor2*0.0001*340/2/0.4;
@@ -477,6 +474,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		if (current_speed_right<0) current_speed_right=0;
 		
 		SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_1,(int)current_speed_left);
+		SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_2,(int)current_speed_right);
 	}
 }
 /* USER CODE END 4 */
