@@ -47,6 +47,9 @@ extern volatile unsigned int echo_sensor1, echo_sensor2, echo_sensor3, echo_sens
 extern volatile unsigned int en_sensor1, en_sensor2, en_sensor3, en_sensor4;
 extern volatile float distance1, distance2, distance3, distance4;
 extern volatile float alpha;
+extern volatile float current_speed_left, current_speed_right;
+extern TIM_HandleTypeDef htim1;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -334,19 +337,24 @@ void TIM2_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1,GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2,GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3,GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4,GPIO_PIN_SET);
-	HAL_TIM_Base_Start_IT(&htim2);
-	
-	//Calculate alpha
-	distance1=echo_sensor1*0.0001*340/2/0.4;
-	distance2=echo_sensor2*0.0001*340/2/0.4;
-	distance3=echo_sensor3*0.0001*340/2/0.4;
-	distance4=echo_sensor4*0.0001*340/2/0.4;
-	alpha=(-distance1*3.14/6-distance2*3.14/3+distance3*3.14/3+distance4*3.14/6)/(distance1+distance2+distance3+distance4);
-	
+//	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1,GPIO_PIN_SET);
+//	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2,GPIO_PIN_SET);
+//	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3,GPIO_PIN_SET);
+//	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4,GPIO_PIN_SET);
+//	HAL_TIM_Base_Start_IT(&htim2);
+//	
+//	//Calculate alpha
+//	distance1=echo_sensor1*0.0001*340/2/0.4;
+//	distance2=echo_sensor2*0.0001*340/2/0.4;
+//	distance3=echo_sensor3*0.0001*340/2/0.4;
+//	distance4=echo_sensor4*0.0001*340/2/0.4;
+//	
+//	alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
+//	
+//	current_speed_left=current_speed_left+alpha;
+//	current_speed_right-=alpha;
+//	
+	//SetPWM_withDutyCycle(&htim1,1,(int)current_speed_left);
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */
