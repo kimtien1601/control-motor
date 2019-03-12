@@ -206,6 +206,7 @@ void SysTick_Handler(void)
 void EXTI3_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI3_IRQn 0 */
+	//tien
 	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_3))
 	{
 		count_pulse=0;
