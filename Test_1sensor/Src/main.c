@@ -51,7 +51,7 @@ volatile unsigned int time_sensor1=0, time_sensor2=0, time_sensor3=0, time_senso
 volatile unsigned int echo_sensor1=0, echo_sensor2=0, echo_sensor3=0, echo_sensor4=0;
 volatile unsigned int en_sensor1=0, en_sensor2=0, en_sensor3=0, en_sensor4=0;
 volatile float distance1=0, distance2=0, distance3=0, distance4=0;
-volatile float alpha=0;
+volatile float alpha=0; 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -61,7 +61,71 @@ static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
+double mftrap(double x,double L,double C1,double C2,double R){
+	double y;
+	if (x<L)
+		y=0;
+	else if (x<C1)
+		y=(x-L)/(C1-L);
+	else if (x<C2)
+		y=1;
+	else if (x<R)
+		y=(R-x)/(R-C2);
+	else
+		y=0;
+	return y;}
+double max(double num1,double num2){
+	return (num1 > num2 ) ? num1 : num2;
+}
+double Defuzzication_R(double e, double de){
 
+	//Return e and de in range [-1 1]
+	e=(e>1)?1:e;
+	e=(e<-1)?-1:e;
+	de=(de>1)?1:de;
+	de=(de<-1)?-1:de;
+
+	double e_NE,e_ZE,e_PO,de_NE,de_ZE,de_PO;
+
+	e_NE=mftrap(e,-1.1,-1,-0.1,0);
+	e_ZE=mftrap(e,-0.1,0,0,0.1);
+	e_PO=mftrap(e,0,0.1,1,1.1);
+
+	de_NE=mftrap(de,-1.1,-1,-1,0);
+	de_ZE=mftrap(de,-1,0,0,1);
+	de_PO=mftrap(de,0,1,1,1.1);
+
+	double	dR_NB=-1;
+	double	dR_NS=-0.4;
+	double	dR_ZE=0;
+	double	dR_PS=0.4;
+	double	dR_PB=1;
+
+	double	beta1=e_NE*de_NE;   //R=NB
+	double	beta2=e_NE*de_ZE;   //R=NS
+	double	beta3=e_NE*de_PO;   //R=ZE
+	double	beta4=e_ZE*de_NE;   //R=NS
+	double	beta5=e_ZE*de_ZE;   //R=ZE
+	double	beta6=e_ZE*de_PO;   //R=PS
+	double	beta7=e_PO*de_NE;   //R=ZE
+	double	beta8=e_PO*de_ZE;   //R=PS
+	double	beta9=e_PO*de_PO;   //R=PB
+
+	double beta_NB=beta1;
+	double beta_NS=max(beta2,beta4);
+	double beta_ZE=max(beta3,max(beta5,beta7));
+	double beta_PS=max(beta6,beta8);
+	double beta_PB=beta9;
+
+
+	double sumBeta=beta_NB+beta_NS+beta_ZE+beta_PS+beta_PB;
+	double dR=(dR_NB*beta_NB+dR_NS*beta_NS+dR_ZE*beta_ZE+dR_PS*beta_PS+dR_PB*beta_PB)/sumBeta;
+
+	return dR;
+}
+double Defuzzication_L(double e, double de){
+	return -1*Defuzzication_R(e,de);
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -324,6 +388,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PB5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
@@ -336,6 +406,9 @@ static void MX_GPIO_Init(void)
 
   HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 
