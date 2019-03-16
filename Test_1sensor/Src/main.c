@@ -66,6 +66,79 @@ static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
+//Fuzzy
+double mftrap(double x,double L,double C1, double C2, double R){
+	double y;
+	if (x<L)
+		y=0;
+	else if (x<C1)
+		y=(x-L)/(C1-L);
+	else if (x<C2)
+		y=1;
+	else if (x<R)
+		y=(R-x)/(R-C2);
+	else
+		y=0;
+	return y;
+}
+
+double max(double num1, double num2)
+{
+    return (num1 > num2 ) ? num1 : num2;
+}
+
+double DefuzzificationR(double e,double de){
+	double alpha_NB,alpha_NS,alpha_ZE,alpha_PS,alpha_PB,v_LO,v_ME,v_HI;
+	alpha_NB=mftrap(alpha,-60,-60,-45,-30);
+	alpha_NS=mftrap(alpha,-45,-30,-30,0);
+	alpha_ZE=mftrap(alpha,-30,0,0,30);
+	alpha_PS=mftrap(alpha,0,30,30,45);
+	alpha_PB=mftrap(alpha,30,45,60,60);
+
+	v_LO=mftrap(alpha,0,0,30,50);
+	v_ME=mftrap(alpha,0,30,50,70);
+	v_HI=mftrap(alpha,30,50,70,100);
+
+	double pwm_NB=-10;
+	double pwm_NM=-6;
+	double pwm_NS=-3;
+	double pwm_ZE=0;
+	double pwm_PS=3;
+	double pwm_PM=6;
+	double pwm_PB=-10;
+
+	//RULES
+	double beta1=alpha_NB*v_LO; //PB
+	double beta2=alpha_NB*v_ME; //PM
+	double beta3=alpha_NB*v_HI; //PS
+	double beta4=alpha_NS*v_LO; //PM
+	double beta5=alpha_NS*v_ME; //PS
+	double beta6=alpha_NS*v_HI; //ZE
+	double beta7=alpha_ZE*v_LO; //PS
+	double beta8=alpha_ZE*v_ME; //ZE
+	double beta9=alpha_ZE*v_HI; //NS
+	double beta10=alpha_PS*v_LO; //ZE
+	double beta11=alpha_PS*v_ME; //NS
+	double beta12=alpha_PS*v_HI; //NM
+	double beta13=alpha_PB*v_LO; //NS
+	double beta14=alpha_PB*v_ME; //NM
+	double beta15=alpha_PB*v_HI; //NB
+
+	double beta_PB=beta1;
+	double beta_PM=max(beta2,beta4);
+	double beta_PS=max(max(beta3,beta5),beta7);
+	double beta_ZE=max(max(beta6,beta8),beta10);
+	double beta_NS=max(max(beta9,beta11),beta13);
+	double beta_NM=max(beta12,beta14);
+	double beta_NB=beta15;
+
+	double sumBeta=beta_NB+beta_NM+beta_NS+beta_ZE+beta_PS+beta_PM+beta_PB;
+	double re=(pwm_NB*beta_NB+pwm_NM*beta_NM+pwm_NS*beta_NS+pwm_ZE*beta_ZE+pwm_PS*beta_PS+pwm_PM*beta_PB+pwm_PB*beta_PB)/sumBeta;
+	return re;
+}
+
+
+
 //Ham xuat % dong co
 void SetPWM_withDutyCycle(TIM_HandleTypeDef *htim, uint32_t Channel, int dutyCycle){
 
