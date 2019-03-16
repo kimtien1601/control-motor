@@ -99,13 +99,13 @@ double DefuzzificationR(double e,double de){
 	v_ME=mftrap(alpha,0,30,50,70);
 	v_HI=mftrap(alpha,30,50,70,100);
 
-	double pwm_NB=-10;
-	double pwm_NM=-6;
-	double pwm_NS=-3;
-	double pwm_ZE=0;
-	double pwm_PS=3;
-	double pwm_PM=6;
-	double pwm_PB=-10;
+	double dv_NB=-10;
+	double dv_NM=-6;
+	double dv_NS=-3;
+	double dv_ZE=0;
+	double dv_PS=3;
+	double dv_PM=6;
+	double dv_PB=-10;
 
 	//RULES
 	double beta1=alpha_NB*v_LO; //PB
@@ -133,7 +133,7 @@ double DefuzzificationR(double e,double de){
 	double beta_NB=beta15;
 
 	double sumBeta=beta_NB+beta_NM+beta_NS+beta_ZE+beta_PS+beta_PM+beta_PB;
-	double re=(pwm_NB*beta_NB+pwm_NM*beta_NM+pwm_NS*beta_NS+pwm_ZE*beta_ZE+pwm_PS*beta_PS+pwm_PM*beta_PB+pwm_PB*beta_PB)/sumBeta;
+	double re=(dv_NB*beta_NB+dv_NM*beta_NM+dv_NS*beta_NS+dv_ZE*beta_ZE+dv_PS*beta_PS+dv_PM*beta_PB+dv_PB*beta_PB)/sumBeta;
 	return re;
 }
 
@@ -141,9 +141,8 @@ double DefuzzificationR(double e,double de){
 
 //Ham xuat % dong co
 void SetPWM_withDutyCycle(TIM_HandleTypeDef *htim, uint32_t Channel, int dutyCycle){
-
 	/*This function allow to Write PWM in duty cycle with timer and channel parameters*/
-	int32_t pulse_length = TIM_Period*dutyCycle/100;
+	int32_t pulse_length = TIM_Period*dutyCycle/100;	//range: 250 - 400 
 	__HAL_TIM_SET_COMPARE(htim, Channel, pulse_length);
 };
 /* USER CODE END PFP */
@@ -190,7 +189,7 @@ int main(void)
 	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_2);
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_TIM_Base_Start_IT(&htim4);	
-	
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
