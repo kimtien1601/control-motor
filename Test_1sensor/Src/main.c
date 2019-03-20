@@ -87,7 +87,9 @@ double max(double num1, double num2)
     return (num1 > num2 ) ? num1 : num2;
 }
 
-double DefuzzificationR(double e,double de){
+//Left Motor
+double DefuzzificationL(double alpha,double v)
+{
 	double alpha_NB,alpha_NS,alpha_ZE,alpha_PS,alpha_PB,v_LO,v_ME,v_HI;
 	alpha_NB=mftrap(alpha,-60,-60,-45,-30);
 	alpha_NS=mftrap(alpha,-45,-30,-30,0);
@@ -95,17 +97,17 @@ double DefuzzificationR(double e,double de){
 	alpha_PS=mftrap(alpha,0,30,30,45);
 	alpha_PB=mftrap(alpha,30,45,60,60);
 
-	v_LO=mftrap(alpha,0,0,30,50);
-	v_ME=mftrap(alpha,0,30,50,70);
-	v_HI=mftrap(alpha,30,50,70,100);
+	v_LO=mftrap(v,0,0,30,50);
+	v_ME=mftrap(v,30,50,50,70);
+	v_HI=mftrap(v,50,70,70,100);
 
-	double dv_NB=-10;
-	double dv_NM=-6;
-	double dv_NS=-3;
+	double dv_NB=-30;
+	double dv_NM=-20;
+	double dv_NS=-10;
 	double dv_ZE=0;
-	double dv_PS=3;
-	double dv_PM=6;
-	double dv_PB=-10;
+	double dv_PS=10;
+	double dv_PM=20;
+	double dv_PB=30;
 
 	//RULES
 	double beta1=alpha_NB*v_LO; //PB
@@ -133,10 +135,61 @@ double DefuzzificationR(double e,double de){
 	double beta_NB=beta15;
 
 	double sumBeta=beta_NB+beta_NM+beta_NS+beta_ZE+beta_PS+beta_PM+beta_PB;
-	double re=(dv_NB*beta_NB+dv_NM*beta_NM+dv_NS*beta_NS+dv_ZE*beta_ZE+dv_PS*beta_PS+dv_PM*beta_PB+dv_PB*beta_PB)/sumBeta;
-	return re;
+	double dl=(dv_NB*beta_NB+dv_NM*beta_NM+dv_NS*beta_NS+dv_ZE*beta_ZE+dv_PS*beta_PS+dv_PM*beta_PB+dv_PB*beta_PB)/sumBeta;
+	return dl;
 }
 
+//Right Motor
+double DefuzzificationR(double alpha,double v)
+{
+	double alpha_NB,alpha_NS,alpha_ZE,alpha_PS,alpha_PB,v_LO,v_ME,v_HI;
+	alpha_NB=mftrap(alpha,-60,-60,-45,-30);
+	alpha_NS=mftrap(alpha,-45,-30,-30,0);
+	alpha_ZE=mftrap(alpha,-30,0,0,30);
+	alpha_PS=mftrap(alpha,0,30,30,45);
+	alpha_PB=mftrap(alpha,30,45,60,60);
+
+	v_LO=mftrap(v,0,0,30,50);
+	v_ME=mftrap(v,30,50,50,70);
+	v_HI=mftrap(v,50,70,70,100);
+
+	double dv_NB=-30;
+	double dv_NM=-20;
+	double dv_NS=-10;
+	double dv_ZE=0;
+	double dv_PS=10;
+	double dv_PM=20;
+	double dv_PB=30;
+
+	//RULES
+	double beta1=alpha_NB*v_LO; //NS
+	double beta2=alpha_NB*v_ME; //NM
+	double beta3=alpha_NB*v_HI; //NB
+	double beta4=alpha_NS*v_LO; //ZE
+	double beta5=alpha_NS*v_ME; //NS
+	double beta6=alpha_NS*v_HI; //NM
+	double beta7=alpha_ZE*v_LO; //PS
+	double beta8=alpha_ZE*v_ME; //ZE
+	double beta9=alpha_ZE*v_HI; //NS
+	double beta10=alpha_PS*v_LO; //PM
+	double beta11=alpha_PS*v_ME; //PS
+	double beta12=alpha_PS*v_HI; //ZE
+	double beta13=alpha_PB*v_LO; //PB
+	double beta14=alpha_PB*v_ME; //PM
+	double beta15=alpha_PB*v_HI; //PS	
+
+	double beta_PB=beta13;
+	double beta_PM=max(beta10,beta14);
+	double beta_PS=max(max(beta7,beta11),beta15);
+	double beta_ZE=max(max(beta4,beta8),beta12);
+	double beta_NS=max(max(beta1,beta5),beta9);
+	double beta_NM=max(beta2,beta6);
+	double beta_NB=beta3;
+
+	double sumBeta=beta_NB+beta_NM+beta_NS+beta_ZE+beta_PS+beta_PM+beta_PB;
+	double dr=(dv_NB*beta_NB+dv_NM*beta_NM+dv_NS*beta_NS+dv_ZE*beta_ZE+dv_PS*beta_PS+dv_PM*beta_PB+dv_PB*beta_PB)/sumBeta;
+	return dr;
+}
 
 
 //Ham xuat % dong co
@@ -537,11 +590,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		
 		alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
 		
-		current_speed_left=current_speed_left+alpha/2;
+		current_speed_left=current_speed_left+DefuzzificationL(alpha,current_speed_left);
 		if (current_speed_left>100) current_speed_left=100;
 		if (current_speed_left<0) current_speed_left=0;
 		
-		current_speed_right=current_speed_right-alpha/2;
+		current_speed_right=current_speed_right+DefuzzificationR(alpha,current_speed_right);
 		if (current_speed_right>100) current_speed_right=100;
 		if (current_speed_right<0) current_speed_right=0;
 		
