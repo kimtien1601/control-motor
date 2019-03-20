@@ -99,7 +99,7 @@ double DefuzzificationL(double alpha,double v)
 
 	v_LO=mftrap(v,0,0,30,50);
 	v_ME=mftrap(v,30,50,50,70);
-	v_HI=mftrap(v,50,70,70,100);
+	v_HI=mftrap(v,50,70,100,100);
 
 	double dv_NB=-30;
 	double dv_NM=-20;
@@ -135,8 +135,8 @@ double DefuzzificationL(double alpha,double v)
 	double beta_NB=beta15;
 
 	double sumBeta=beta_NB+beta_NM+beta_NS+beta_ZE+beta_PS+beta_PM+beta_PB;
-	double dl=(dv_NB*beta_NB+dv_NM*beta_NM+dv_NS*beta_NS+dv_ZE*beta_ZE+dv_PS*beta_PS+dv_PM*beta_PB+dv_PB*beta_PB)/sumBeta;
-	return dl;
+	double dv=(dv_NB*beta_NB+dv_NM*beta_NM+dv_NS*beta_NS+dv_ZE*beta_ZE+dv_PS*beta_PS+dv_PM*beta_PB+dv_PB*beta_PB)/sumBeta;
+	return dv;
 }
 
 //Right Motor
@@ -151,7 +151,7 @@ double DefuzzificationR(double alpha,double v)
 
 	v_LO=mftrap(v,0,0,30,50);
 	v_ME=mftrap(v,30,50,50,70);
-	v_HI=mftrap(v,50,70,70,100);
+	v_HI=mftrap(v,50,70,100,100);
 
 	double dv_NB=-30;
 	double dv_NM=-20;
@@ -187,8 +187,8 @@ double DefuzzificationR(double alpha,double v)
 	double beta_NB=beta3;
 
 	double sumBeta=beta_NB+beta_NM+beta_NS+beta_ZE+beta_PS+beta_PM+beta_PB;
-	double dr=(dv_NB*beta_NB+dv_NM*beta_NM+dv_NS*beta_NS+dv_ZE*beta_ZE+dv_PS*beta_PS+dv_PM*beta_PB+dv_PB*beta_PB)/sumBeta;
-	return dr;
+	double dv=(dv_NB*beta_NB+dv_NM*beta_NM+dv_NS*beta_NS+dv_ZE*beta_ZE+dv_PS*beta_PS+dv_PM*beta_PB+dv_PB*beta_PB)/sumBeta;
+	return dv;
 }
 
 
