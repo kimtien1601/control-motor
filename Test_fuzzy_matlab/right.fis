@@ -1,0 +1,59 @@
+[System]
+Name='right'
+Type='sugeno'
+Version=2.0
+NumInputs=2
+NumOutputs=1
+NumRules=15
+AndMethod='prod'
+OrMethod='probor'
+ImpMethod='prod'
+AggMethod='sum'
+DefuzzMethod='wtaver'
+
+[Input1]
+Name='alpha'
+Range=[-60 60]
+NumMFs=5
+MF1='NB':'trapmf',[-60 -60 -45 -30]
+MF2='ZE':'trimf',[-30 0 30]
+MF3='PB':'trapmf',[30 45 60 60]
+MF4='NM':'trimf',[-45 -30 0]
+MF5='PS':'trimf',[0 30 45]
+
+[Input2]
+Name='v'
+Range=[0 100]
+NumMFs=3
+MF1='LO':'trapmf',[0 0 30 50]
+MF2='ME':'trimf',[30 50 70]
+MF3='HI':'trapmf',[50 70 100 100]
+
+[Output1]
+Name='dv'
+Range=[0 1]
+NumMFs=7
+MF1='NB':'constant',[-30]
+MF2='NM':'constant',[-20]
+MF3='NS':'constant',[-10]
+MF4='ZE':'constant',[0]
+MF5='PS':'constant',[10]
+MF6='PM':'constant',[20]
+MF7='PB':'constant',[30]
+
+[Rules]
+1 1, 3 (1) : 1
+1 2, 2 (1) : 1
+1 3, 1 (1) : 1
+4 1, 4 (1) : 1
+4 2, 3 (1) : 1
+4 3, 2 (1) : 1
+2 1, 5 (1) : 1
+2 2, 4 (1) : 1
+2 3, 3 (1) : 1
+5 1, 6 (1) : 1
+5 2, 5 (1) : 1
+5 3, 4 (1) : 1
+3 1, 7 (1) : 1
+3 2, 6 (1) : 1
+3 3, 5 (1) : 1
