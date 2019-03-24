@@ -25,9 +25,9 @@ MF5='PS':'trimf',[0 30 45]
 Name='v'
 Range=[0 100]
 NumMFs=3
-MF1='LO':'trapmf',[0 0 30 50]
-MF2='ME':'trimf',[30 50 70]
-MF3='HI':'trapmf',[50 70 100 100]
+MF1='LO':'trapmf',[0 0 60 75]
+MF2='ME':'trimf',[60 75 90]
+MF3='HI':'trapmf',[75 90 100 100]
 
 [Output1]
 Name='dv'
