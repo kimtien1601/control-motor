@@ -53,9 +53,9 @@ volatile unsigned int echo_sensor1=0, echo_sensor2=0, echo_sensor3=0, echo_senso
 volatile unsigned int en_sensor1=0, en_sensor2=0, en_sensor3=0, en_sensor4=0;
 volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 volatile float alpha=0; 
-volatile float current_speed_left=70, current_speed_right=70;
+volatile double current_speed_left=70, current_speed_right=70;
 unsigned int TIM_Period=399;
-
+volatile double dvl=0,dvr=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,9 +97,9 @@ double DefuzzificationL(double alpha,double v)
 	alpha_PS=mftrap(alpha,0,30,30,45);
 	alpha_PB=mftrap(alpha,30,45,60,60);
 
-	v_LO=mftrap(v,0,0,30,50);
-	v_ME=mftrap(v,30,50,50,70);
-	v_HI=mftrap(v,50,70,100,100);
+	v_LO=mftrap(v,0,0,60,75);
+	v_ME=mftrap(v,60,75,75,90);
+	v_HI=mftrap(v,75,90,100,100);
 
 	double dv_NB=-30;
 	double dv_NM=-20;
@@ -149,9 +149,9 @@ double DefuzzificationR(double alpha,double v)
 	alpha_PS=mftrap(alpha,0,30,30,45);
 	alpha_PB=mftrap(alpha,30,45,60,60);
 
-	v_LO=mftrap(v,0,0,30,50);
-	v_ME=mftrap(v,30,50,50,70);
-	v_HI=mftrap(v,50,70,100,100);
+	v_LO=mftrap(v,0,0,60,75);
+	v_ME=mftrap(v,60,75,75,90);
+	v_HI=mftrap(v,75,90,100,100);
 
 	double dv_NB=-30;
 	double dv_NM=-20;
@@ -536,21 +536,16 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4 
-                          |GPIO_PIN_5, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PB1 PB2 PB3 PB4 
-                           PB5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4 
-                          |GPIO_PIN_5;
+  /*Configure GPIO pins : PB1 PB3 PB4 PB5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PD1 PD2 PD3 PD4 
-                           PD5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4 
-                          |GPIO_PIN_5;
+  /*Configure GPIO pins : PD1 PD3 PD4 PD5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -559,9 +554,6 @@ static void MX_GPIO_Init(void)
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
   HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI3_IRQn);
@@ -578,7 +570,6 @@ static void MX_GPIO_Init(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance==htim3.Instance){
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1,GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5,GPIO_PIN_SET);
@@ -592,12 +583,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		
 		alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
 		
+		dvl=DefuzzificationL(alpha,current_speed_left);
 		current_speed_left=current_speed_left+DefuzzificationL(alpha,current_speed_left);
-		if (current_speed_left>100) current_speed_left=100;
+		if (current_speed_left>99) current_speed_left=99;
 		if (current_speed_left<0) current_speed_left=0;
 		
+		dvr=DefuzzificationR(alpha,current_speed_right);
 		current_speed_right=current_speed_right+DefuzzificationR(alpha,current_speed_right);
-		if (current_speed_right>100) current_speed_right=100;
+		if (current_speed_right>99) current_speed_right=99;
 		if (current_speed_right<0) current_speed_right=0;
 		
 		SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_1,(int)current_speed_left);
