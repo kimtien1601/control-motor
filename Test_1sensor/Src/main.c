@@ -53,7 +53,7 @@ volatile unsigned int echo_sensor1=0, echo_sensor2=0, echo_sensor3=0, echo_senso
 volatile unsigned int en_sensor1=0, en_sensor2=0, en_sensor3=0, en_sensor4=0;
 volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 volatile float alpha=0; 
-volatile float current_speed_left=50, current_speed_right=50;
+volatile float current_speed_left=70, current_speed_right=70;
 unsigned int TIM_Period=399;
 
 /* USER CODE END PV */
@@ -232,16 +232,18 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_TIM2_Init();
-  MX_TIM3_Init();
-  MX_TIM4_Init();
-  MX_TIM1_Init();
+	MX_GPIO_Init();
+	MX_TIM2_Init();
+	MX_TIM3_Init();
+	MX_TIM4_Init();
+	MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_2);
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_TIM_Base_Start_IT(&htim4);	
+//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
+//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
 
   /* USER CODE END 2 */
 
