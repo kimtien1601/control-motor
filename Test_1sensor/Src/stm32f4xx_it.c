@@ -305,7 +305,16 @@ void EXTI4_IRQHandler(void)
 void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
-
+	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5))
+	{
+		en_sensor2=1;
+		time_sensor2=0;		
+	}
+	else
+	{
+		echo_sensor2=time_sensor2;
+		en_sensor2=0;
+	}
   /* USER CODE END EXTI9_5_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
@@ -323,6 +332,7 @@ void TIM2_IRQHandler(void)
 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_2,GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_3,GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_4,GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_5,GPIO_PIN_RESET);
 	HAL_TIM_Base_Stop_IT(&htim2);
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
