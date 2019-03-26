@@ -42,6 +42,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+SPI_HandleTypeDef hspi1;
+DMA_HandleTypeDef hdma_spi1_rx;
+
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
@@ -55,15 +58,18 @@ volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 volatile float alpha=0; 
 volatile double current_speed_left=70, current_speed_right=70;
 unsigned int TIM_Period=399;
-volatile double dvl=0,dvr=0;
+
+uint8_t receivebuffer[4];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_SPI1_Init(void);
 static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 //Fuzzy
@@ -88,7 +94,7 @@ double max(double num1, double num2)
 }
 
 //Left Motor
-double DefuzzificationL(double alpha,double v)
+double Defuzzification_Obstacle_L(double alpha,double v)
 {
 	double alpha_NB,alpha_NS,alpha_ZE,alpha_PS,alpha_PB,v_LO,v_ME,v_HI;
 	alpha_NB=mftrap(alpha,-60,-60,-45,-30);
@@ -139,8 +145,60 @@ double DefuzzificationL(double alpha,double v)
 	return dv;
 }
 
+double Defuzzification_Track_L(double ePosition,double eDistance)
+{
+	double eP_NB,eP_NS,eP_ZE,eP_PS,eP_PB,eD_NE,eD_ZE,eD_PO;
+	eP_NB=mftrap(ePosition,-20,-10,-7,-4);
+	eP_NS=mftrap(ePosition,-7,-4,-4,0);
+	eP_ZE=mftrap(ePosition,-4,0,0,4);
+	eP_PS=mftrap(ePosition,0,4,4,7);
+	eP_PB=mftrap(ePosition,4,7,10,20);
+
+	eD_NE=mftrap(ePosition,-20,-10,-5,0);
+	eD_ZE=mftrap(ePosition,-5,0,0,5);
+	eD_PO=mftrap(ePosition,0,5,10,20);
+
+
+	double dv_NB=-30;
+	double dv_NM=-20;
+	double dv_NS=-10;
+	double dv_ZE=0;
+	double dv_PS=10;
+	double dv_PM=20;
+	double dv_PB=30;
+
+	//RULES
+	double beta1=eP_NB*eD_NE; //PB
+	double beta2=eP_NB*eD_ZE; //PM
+	double beta3=eP_NB*eD_PO; //PS
+	double beta4=eP_NS*eD_NE; //PM
+	double beta5=eP_NS*eD_ZE; //PS
+	double beta6=eP_NS*eD_PO; //ZE
+	double beta7=eP_ZE*eD_NE; //PS
+	double beta8=eP_ZE*eD_ZE; //ZE
+	double beta9=eP_ZE*eD_PO; //NS
+	double beta10=eP_PS*eD_NE; //ZE
+	double beta11=eP_PS*eD_ZE; //NS
+	double beta12=eP_PS*eD_PO; //NM
+	double beta13=eP_PB*eD_NE; //NS
+	double beta14=eP_PB*eD_ZE; //NM
+	double beta15=eP_PB*eD_PO; //NB
+
+	double beta_PB=beta1;
+	double beta_PM=max(beta2,beta4);
+	double beta_PS=max(max(beta3,beta5),beta7);
+	double beta_ZE=max(max(beta6,beta8),beta10);
+	double beta_NS=max(max(beta9,beta11),beta13);
+	double beta_NM=max(beta12,beta14);
+	double beta_NB=beta15;
+
+	double sumBeta=beta_NB+beta_NM+beta_NS+beta_ZE+beta_PS+beta_PM+beta_PB;
+	double dv=(dv_NB*beta_NB+dv_NM*beta_NM+dv_NS*beta_NS+dv_ZE*beta_ZE+dv_PS*beta_PS+dv_PM*beta_PB+dv_PB*beta_PB)/sumBeta;
+	return dv;
+}
+
 //Right Motor
-double DefuzzificationR(double alpha,double v)
+double Defuzzification_Obstacle_R(double alpha,double v)
 {
 	double alpha_NB,alpha_NS,alpha_ZE,alpha_PS,alpha_PB,v_LO,v_ME,v_HI;
 	alpha_NB=mftrap(alpha,-60,-60,-45,-30);
@@ -190,7 +248,56 @@ double DefuzzificationR(double alpha,double v)
 	double dv=(dv_NB*beta_NB+dv_NM*beta_NM+dv_NS*beta_NS+dv_ZE*beta_ZE+dv_PS*beta_PS+dv_PM*beta_PB+dv_PB*beta_PB)/sumBeta;
 	return dv;
 }
+double Defuzzification_Track_R(double ePosition,double eDistance)
+{
+	double eP_NB,eP_NS,eP_ZE,eP_PS,eP_PB,eD_NE,eD_ZE,eD_PO;
+	eP_NB=mftrap(ePosition,-20,-10,-7,-4);
+	eP_NS=mftrap(ePosition,-7,-4,-4,0);
+	eP_ZE=mftrap(ePosition,-4,0,0,4);
+	eP_PS=mftrap(ePosition,0,4,4,7);
+	eP_PB=mftrap(ePosition,4,7,10,20);
 
+	eD_NE=mftrap(ePosition,-20,-10,-5,0);
+	eD_ZE=mftrap(ePosition,-5,0,0,5);
+	eD_PO=mftrap(ePosition,0,5,10,20);
+
+	double dv_NB=-30;
+	double dv_NM=-20;
+	double dv_NS=-10;
+	double dv_ZE=0;
+	double dv_PS=10;
+	double dv_PM=20;
+	double dv_PB=30;
+
+	//RULES
+	double beta1=eP_NB*eD_NE; //NS
+	double beta2=eP_NB*eD_ZE; //NM
+	double beta3=eP_NB*eD_PO; //NB
+	double beta4=eP_NS*eD_NE; //ZE
+	double beta5=eP_NS*eD_ZE; //NS
+	double beta6=eP_NS*eD_PO; //NM
+	double beta7=eP_ZE*eD_NE; //PS
+	double beta8=eP_ZE*eD_ZE; //ZE
+	double beta9=eP_ZE*eD_PO; //NS
+	double beta10=eP_PS*eD_NE; //PM
+	double beta11=eP_PS*eD_ZE; //PS
+	double beta12=eP_PS*eD_PO; //ZE
+	double beta13=eP_PB*eD_NE; //PB
+	double beta14=eP_PB*eD_ZE; //PM
+	double beta15=eP_PB*eD_PO; //PS	
+
+	double beta_PB=beta13;
+	double beta_PM=max(beta10,beta14);
+	double beta_PS=max(max(beta7,beta11),beta15);
+	double beta_ZE=max(max(beta4,beta8),beta12);
+	double beta_NS=max(max(beta1,beta5),beta9);
+	double beta_NM=max(beta2,beta6);
+	double beta_NB=beta3;
+
+	double sumBeta=beta_NB+beta_NM+beta_NS+beta_ZE+beta_PS+beta_PM+beta_PB;
+	double dv=(dv_NB*beta_NB+dv_NM*beta_NM+dv_NS*beta_NS+dv_ZE*beta_ZE+dv_PS*beta_PS+dv_PM*beta_PB+dv_PB*beta_PB)/sumBeta;
+	return dv;
+}
 
 //Ham xuat % dong co
 void SetPWM_withDutyCycle(TIM_HandleTypeDef *htim, uint32_t Channel, int dutyCycle){
@@ -233,17 +340,18 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM4_Init();
+  MX_SPI1_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_2);
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_TIM_Base_Start_IT(&htim4);	
-//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
-//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
+	HAL_SPI_Receive_DMA(&hspi1,&receivebuffer[0],4);
 
   /* USER CODE END 2 */
 
@@ -300,6 +408,43 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_SLAVE;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_HARD_INPUT;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
 }
 
 /**
@@ -520,6 +665,21 @@ static void MX_TIM4_Init(void)
 
 }
 
+/** 
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void) 
+{
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+
+}
+
 /**
   * @brief GPIO Initialization Function
   * @param None
@@ -530,9 +690,9 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
@@ -568,31 +728,40 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-	if(htim->Instance==htim3.Instance){
+	if(htim->Instance==htim3.Instance)
+	{
+		//Set trigger signal
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5,GPIO_PIN_SET);
 		HAL_TIM_Base_Start_IT(&htim2);
 
-		//Calculate alpha
+		//Calculate distance
 		distance1=echo_sensor1*0.0001*340/2/0.4;
 		distance2=echo_sensor2*0.0001*340/2/0.4;
 		distance3=echo_sensor3*0.0001*340/2/0.4;
-		distance4=echo_sensor4*0.0001*340/2/0.4;
+		distance4=echo_sensor4*0.0001*340/2/0.4;	
 		
-		alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
+		if (distance1>50 && distance2>50 && distance3>50 && distance4>50)
+		{
+			current_speed_left=current_speed_left+Defuzzification_Track_L(receivebuffer[0],receivebuffer[1]);
+			current_speed_right=current_speed_right+Defuzzification_Track_R(receivebuffer[0],receivebuffer[1]);
+		}
+		else
+		{			
+			alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
+			current_speed_left=current_speed_left+Defuzzification_Obstacle_L(alpha,current_speed_left);	
+			current_speed_right=current_speed_right+Defuzzification_Obstacle_R(alpha,current_speed_right);		
+		}
 		
-		dvl=DefuzzificationL(alpha,current_speed_left);
-		current_speed_left=current_speed_left+DefuzzificationL(alpha,current_speed_left);
+		//Scale to range 0->99
 		if (current_speed_left>99) current_speed_left=99;
 		if (current_speed_left<0) current_speed_left=0;
-		
-		dvr=DefuzzificationR(alpha,current_speed_right);
-		current_speed_right=current_speed_right+DefuzzificationR(alpha,current_speed_right);
 		if (current_speed_right>99) current_speed_right=99;
 		if (current_speed_right<0) current_speed_right=0;
 		
+		//Control 2 motors
 		SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_1,(int)current_speed_left);
 		SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_2,(int)current_speed_right);
 	}

@@ -3,6 +3,7 @@
 "test_1sensor\main.o"
 "test_1sensor\stm32f4xx_it.o"
 "test_1sensor\stm32f4xx_hal_msp.o"
+"test_1sensor\stm32f4xx_hal_spi.o"
 "test_1sensor\stm32f4xx_hal_tim.o"
 "test_1sensor\stm32f4xx_hal_tim_ex.o"
 "test_1sensor\stm32f4xx_hal_rcc.o"
