@@ -158,7 +158,6 @@ double Defuzzification_Track_L(double ePosition,double eDistance)
 	eD_ZE=mftrap(ePosition,-5,0,0,5);
 	eD_PO=mftrap(ePosition,0,5,10,20);
 
-
 	double dv_NB=-30;
 	double dv_NM=-20;
 	double dv_NS=-10;
@@ -380,7 +379,7 @@ int main(void)
 	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_3);
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_TIM_Base_Start_IT(&htim4);	
-	HAL_SPI_Receive_DMA(&hspi1,&receivebuffer[0],4);
+
 
   /* USER CODE END 2 */
 
@@ -765,6 +764,7 @@ static void MX_GPIO_Init(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance==htim3.Instance)
 	{
+		HAL_SPI_Receive_DMA(&hspi1,&receivebuffer[0],4);
 		//Set trigger signal
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3,GPIO_PIN_SET);
