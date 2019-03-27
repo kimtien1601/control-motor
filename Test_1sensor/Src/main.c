@@ -56,6 +56,7 @@ volatile float alpha=0;
 volatile double current_speed_left=70, current_speed_right=70;
 unsigned int TIM_Period=399;
 volatile double dvl=0,dvr=0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,13 +102,13 @@ double DefuzzificationL(double alpha,double v)
 	v_ME=mftrap(v,60,75,75,90);
 	v_HI=mftrap(v,75,90,100,100);
 
-	double dv_NB=-30;
-	double dv_NM=-20;
-	double dv_NS=-10;
+	double dv_NB=-40;
+	double dv_NM=-30;
+	double dv_NS=-20;
 	double dv_ZE=0;
-	double dv_PS=10;
-	double dv_PM=20;
-	double dv_PB=30;
+	double dv_PS=20;
+	double dv_PM=30;
+	double dv_PB=40;
 
 	//RULES
 	double beta1=alpha_NB*v_LO; //PB
@@ -153,13 +154,13 @@ double DefuzzificationR(double alpha,double v)
 	v_ME=mftrap(v,60,75,75,90);
 	v_HI=mftrap(v,75,90,100,100);
 
-	double dv_NB=-30;
-	double dv_NM=-20;
-	double dv_NS=-10;
+	double dv_NB=-40;
+	double dv_NM=-30;
+	double dv_NS=-20;
 	double dv_ZE=0;
-	double dv_PS=10;
-	double dv_PM=20;
-	double dv_PB=30;
+	double dv_PS=20;
+	double dv_PM=30;
+	double dv_PB=40;
 
 	//RULES
 	double beta1=alpha_NB*v_LO; //NS
@@ -198,6 +199,36 @@ void SetPWM_withDutyCycle(TIM_HandleTypeDef *htim, uint32_t Channel, int dutyCyc
 	int32_t pulse_length = TIM_Period*dutyCycle/100;	//range: 250 - 400 
 	__HAL_TIM_SET_COMPARE(htim, Channel, pulse_length);
 };
+void SetPWM_Forward_Backward(int value, uint16_t leftmotor)
+{
+	if (leftmotor==1)
+	{
+		if (value>=50)
+		{
+			SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_1,value);
+			HAL_GPIO_WritePin(GPIOE,GPIO_PIN_11,0);
+		}
+		if (value<50)
+		{
+			SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_1,99-value);
+			HAL_GPIO_WritePin(GPIOE,GPIO_PIN_11,1);
+		}
+	}
+	else
+	{
+		if (value>=50)
+		{
+			SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_3,value);
+			HAL_GPIO_WritePin(GPIOE,GPIO_PIN_14,0);
+		}
+		if (value<50)
+		{
+			SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_3,99-value);
+			HAL_GPIO_WritePin(GPIOE,GPIO_PIN_14,1);
+		}
+	}
+}
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -239,11 +270,17 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_2);
+//	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_3);
+//	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_4);
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_TIM_Base_Start_IT(&htim4);	
-//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 350);
+	HAL_GPIO_WritePin(GPIOE,GPIO_PIN_11,1);
 //	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 350);
+	HAL_GPIO_WritePin(GPIOE,GPIO_PIN_14,1);
+//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 300);
 
   /* USER CODE END 2 */
 
@@ -356,10 +393,6 @@ static void MX_TIM1_Init(void)
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
   sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -536,6 +569,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11|GPIO_PIN_14, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PB1 PB3 PB4 PB5 */
@@ -543,6 +579,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PE11 PE14 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_14;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PD1 PD3 PD4 PD5 */
   GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
@@ -583,18 +626,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		
 		alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
 		
-		dvl=DefuzzificationL(alpha,current_speed_left);
+		dvl=0;
 		current_speed_left=current_speed_left+DefuzzificationL(alpha,current_speed_left);
 		if (current_speed_left>99) current_speed_left=99;
 		if (current_speed_left<0) current_speed_left=0;
 		
-		dvr=DefuzzificationR(alpha,current_speed_right);
+		dvr=0;
 		current_speed_right=current_speed_right+DefuzzificationR(alpha,current_speed_right);
 		if (current_speed_right>99) current_speed_right=99;
 		if (current_speed_right<0) current_speed_right=0;
 		
-		SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_1,(int)current_speed_left);
-		SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_2,(int)current_speed_right);
+		SetPWM_Forward_Backward((int)current_speed_left,1);
+		SetPWM_Forward_Backward((int)current_speed_right,0);
 	}
 }
 /* USER CODE END 4 */
