@@ -120,7 +120,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
     hdma_spi1_rx.Init.MemInc = DMA_MINC_ENABLE;
     hdma_spi1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_spi1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    hdma_spi1_rx.Init.Mode = DMA_NORMAL;
+    hdma_spi1_rx.Init.Mode = DMA_CIRCULAR;
     hdma_spi1_rx.Init.Priority = DMA_PRIORITY_LOW;
     hdma_spi1_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(&hdma_spi1_rx) != HAL_OK)
@@ -252,10 +252,9 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
     __HAL_RCC_GPIOE_CLK_ENABLE();
     /**TIM1 GPIO Configuration    
     PE9     ------> TIM1_CH1
-    PE11     ------> TIM1_CH2
     PE13     ------> TIM1_CH3 
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_11|GPIO_PIN_13;
+    GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_13;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

@@ -58,7 +58,7 @@ volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 volatile float alpha=0; 
 volatile double current_speed_left=70, current_speed_right=70;
 unsigned int TIM_Period=399;
-
+volatile unsigned int en_obstacle=0;
 uint8_t receivebuffer[4];
 /* USER CODE END PV */
 
@@ -305,6 +305,35 @@ void SetPWM_withDutyCycle(TIM_HandleTypeDef *htim, uint32_t Channel, int dutyCyc
 	int32_t pulse_length = TIM_Period*dutyCycle/100;	//range: 250 - 400 
 	__HAL_TIM_SET_COMPARE(htim, Channel, pulse_length);
 };
+void SetPWM_Forward_Backward(int value, uint16_t leftmotor)
+{
+	if (leftmotor==1)
+	{
+		if (value>=50)
+		{
+			SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_1,value);
+			HAL_GPIO_WritePin(GPIOE,GPIO_PIN_11,0);
+		}
+		if (value<50)
+		{
+			SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_1,99-value);
+			HAL_GPIO_WritePin(GPIOE,GPIO_PIN_11,1);
+		}
+	}
+	else
+	{
+		if (value>=50)
+		{
+			SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_3,value);
+			HAL_GPIO_WritePin(GPIOE,GPIO_PIN_14,0);
+		}
+		if (value<50)
+		{
+			SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_3,99-value);
+			HAL_GPIO_WritePin(GPIOE,GPIO_PIN_14,1);
+		}
+	}
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -348,7 +377,7 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start_IT(&htim1,TIM_CHANNEL_3);
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_TIM_Base_Start_IT(&htim4);	
 	HAL_SPI_Receive_DMA(&hspi1,&receivebuffer[0],4);
@@ -501,10 +530,6 @@ static void MX_TIM1_Init(void)
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
   sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -696,6 +721,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11|GPIO_PIN_14, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PB1 PB3 PB4 PB5 */
@@ -703,6 +731,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PE11 PE14 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_14;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PD1 PD3 PD4 PD5 */
   GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
@@ -743,13 +778,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		distance3=echo_sensor3*0.0001*340/2/0.4;
 		distance4=echo_sensor4*0.0001*340/2/0.4;	
 		
-		if (distance1>50 && distance2>50 && distance3>50 && distance4>50)
+		if (distance1>90 && distance2>90 && distance3>90 && distance4>90)
 		{
+			en_obstacle=0;
 			current_speed_left=current_speed_left+Defuzzification_Track_L(receivebuffer[0],receivebuffer[1]);
 			current_speed_right=current_speed_right+Defuzzification_Track_R(receivebuffer[0],receivebuffer[1]);
 		}
 		else
 		{			
+			en_obstacle=1;
 			alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
 			current_speed_left=current_speed_left+Defuzzification_Obstacle_L(alpha,current_speed_left);	
 			current_speed_right=current_speed_right+Defuzzification_Obstacle_R(alpha,current_speed_right);		
@@ -762,8 +799,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		if (current_speed_right<0) current_speed_right=0;
 		
 		//Control 2 motors
-		SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_1,(int)current_speed_left);
-		SetPWM_withDutyCycle(&htim1,TIM_CHANNEL_2,(int)current_speed_right);
+		SetPWM_Forward_Backward((int)current_speed_left,1);
+		SetPWM_Forward_Backward((int)current_speed_right,0);
 	}
 }
 /* USER CODE END 4 */
