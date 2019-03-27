@@ -59,7 +59,7 @@ volatile float alpha=0;
 volatile double current_speed_left=70, current_speed_right=70;
 unsigned int TIM_Period=399;
 volatile unsigned int en_obstacle=0;
-uint8_t receivebuffer[4];
+int8_t receivebuffer[4];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
