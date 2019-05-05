@@ -58,10 +58,10 @@ volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 volatile float alpha=0; 
 volatile double current_speed_left=70, current_speed_right=70;
 unsigned int TIM_Period=399;
-unsigned int upper_limit_sensor=100;
+unsigned int upper_limit_sensor=90;
 volatile unsigned int count_spin=0;
 volatile int error_Position=0,error_Distance=0;
-uint8_t receivebuffer[7];
+uint8_t receivebuffer[7],isTracking;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -151,15 +151,15 @@ double Defuzzification_Obstacle_L(double alpha,double v)
 double Defuzzification_Track_L(double ePosition,double eDistance)
 {
 	double eP_NB,eP_NS,eP_ZE,eP_PS,eP_PB,eD_NE,eD_ZE,eD_PO;
-	eP_NB=mftrap(ePosition,-20,-10,-7,-4);
-	eP_NS=mftrap(ePosition,-7,-4,-4,0);
-	eP_ZE=mftrap(ePosition,-4,0,0,4);
-	eP_PS=mftrap(ePosition,0,4,4,7);
-	eP_PB=mftrap(ePosition,4,7,10,20);
+	eP_NB=mftrap(ePosition,-160,-80,-56,-32);
+	eP_NS=mftrap(ePosition,-56,-32,-32,0);
+	eP_ZE=mftrap(ePosition,-32,0,0,32);
+	eP_PS=mftrap(ePosition,0,32,32,56);
+	eP_PB=mftrap(ePosition,32,56,80,160);
 
-	eD_NE=mftrap(ePosition,-20,-10,-5,0);
-	eD_ZE=mftrap(ePosition,-5,0,0,5);
-	eD_PO=mftrap(ePosition,0,5,10,20);
+	eD_NE=mftrap(eDistance,-100,-50,-25,0);
+	eD_ZE=mftrap(eDistance,-25,0,0,25);
+	eD_PO=mftrap(eDistance,0,25,50,100);
 
 	double dv_NB=-30;
 	double dv_NM=-20;
@@ -253,15 +253,15 @@ double Defuzzification_Obstacle_R(double alpha,double v)
 double Defuzzification_Track_R(double ePosition,double eDistance)
 {
 	double eP_NB,eP_NS,eP_ZE,eP_PS,eP_PB,eD_NE,eD_ZE,eD_PO;
-	eP_NB=mftrap(ePosition,-20,-10,-7,-4);
-	eP_NS=mftrap(ePosition,-7,-4,-4,0);
-	eP_ZE=mftrap(ePosition,-4,0,0,4);
-	eP_PS=mftrap(ePosition,0,4,4,7);
-	eP_PB=mftrap(ePosition,4,7,10,20);
+	eP_NB=mftrap(ePosition,-160,-80,-56,-32);
+	eP_NS=mftrap(ePosition,-56,-32,-32,0);
+	eP_ZE=mftrap(ePosition,-32,0,0,32);
+	eP_PS=mftrap(ePosition,0,32,32,56);
+	eP_PB=mftrap(ePosition,32,56,80,160);
 
-	eD_NE=mftrap(ePosition,-20,-10,-5,0);
-	eD_ZE=mftrap(ePosition,-5,0,0,5);
-	eD_PO=mftrap(ePosition,0,5,10,20);
+	eD_NE=mftrap(eDistance,-100,-50,-25,0);
+	eD_ZE=mftrap(eDistance,-25,0,0,25);
+	eD_PO=mftrap(eDistance,0,25,50,100);
 
 	double dv_NB=-30;
 	double dv_NM=-20;
@@ -777,15 +777,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		
 		//Get data from Raspberrry through SPI
 		HAL_SPI_Receive_DMA(&hspi1,&receivebuffer[0],7);
-		
+		isTracking=receivebuffer[0];
 		//if found its owner-----------------------------
-		if (receivebuffer[0]==1)
+		if (isTracking==1)
 		{
 				count_spin=0; //reset spin counter after lost
 			
 				error_Position= (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[1]);
-				error_Distance= (int16_t)(((int16_t)receivebuffer[4]<<8)|(int16_t)receivebuffer[3]);	
-
+				error_Distance= (int16_t)(((int16_t)receivebuffer[4]<<8)|(int16_t)receivebuffer[3]);
+				
 				//Calculate distance
 				distance1=echo_sensor1*0.0001*340/2/0.4;
 				distance2=echo_sensor2*0.0001*340/2/0.4;
