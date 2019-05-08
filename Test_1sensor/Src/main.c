@@ -56,7 +56,7 @@ volatile unsigned int echo_sensor1=0, echo_sensor2=0, echo_sensor3=0, echo_senso
 volatile unsigned int en_sensor1=0, en_sensor2=0, en_sensor3=0, en_sensor4=0;
 volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 volatile float alpha=0; 
-volatile double current_speed_left=70, current_speed_right=70;
+volatile double current_speed_left=0, current_speed_right=0;
 unsigned int TIM_Period=399;
 unsigned int upper_limit_sensor=90;
 volatile unsigned int count_spin=0;
@@ -151,15 +151,15 @@ double Defuzzification_Obstacle_L(double alpha,double v)
 double Defuzzification_Track_L(double ePosition,double eDistance)
 {
 	double eP_NB,eP_NS,eP_ZE,eP_PS,eP_PB,eD_NE,eD_ZE,eD_PO;
-	eP_NB=mftrap(ePosition,-160,-80,-56,-32);
-	eP_NS=mftrap(ePosition,-56,-32,-32,0);
-	eP_ZE=mftrap(ePosition,-32,0,0,32);
-	eP_PS=mftrap(ePosition,0,32,32,56);
-	eP_PB=mftrap(ePosition,32,56,80,160);
+	eP_NB=mftrap(ePosition,-180,-180,-140,-80);
+	eP_NS=mftrap(ePosition,-140,-80,-80,0);
+	eP_ZE=mftrap(ePosition,-80,0,0,80);
+	eP_PS=mftrap(ePosition,0,80,80,140);
+	eP_PB=mftrap(ePosition,80,140,180,180);
 
-	eD_NE=mftrap(eDistance,-100,-50,-25,0);
-	eD_ZE=mftrap(eDistance,-25,0,0,25);
-	eD_PO=mftrap(eDistance,0,25,50,100);
+	eD_NE=mftrap(eDistance,-100,-100,-50,0);
+	eD_ZE=mftrap(eDistance,-50,0,0,50);
+	eD_PO=mftrap(eDistance,0,50,100,100);
 
 	double dv_NB=-30;
 	double dv_NM=-20;
@@ -253,15 +253,15 @@ double Defuzzification_Obstacle_R(double alpha,double v)
 double Defuzzification_Track_R(double ePosition,double eDistance)
 {
 	double eP_NB,eP_NS,eP_ZE,eP_PS,eP_PB,eD_NE,eD_ZE,eD_PO;
-	eP_NB=mftrap(ePosition,-160,-80,-56,-32);
-	eP_NS=mftrap(ePosition,-56,-32,-32,0);
-	eP_ZE=mftrap(ePosition,-32,0,0,32);
-	eP_PS=mftrap(ePosition,0,32,32,56);
-	eP_PB=mftrap(ePosition,32,56,80,160);
+	eP_NB=mftrap(ePosition,-180,-180,-140,-80);
+	eP_NS=mftrap(ePosition,-140,-80,-80,0);
+	eP_ZE=mftrap(ePosition,-80,0,0,80);
+	eP_PS=mftrap(ePosition,0,80,80,140);
+	eP_PB=mftrap(ePosition,80,140,180,180);
 
-	eD_NE=mftrap(eDistance,-100,-50,-25,0);
-	eD_ZE=mftrap(eDistance,-25,0,0,25);
-	eD_PO=mftrap(eDistance,0,25,50,100);
+	eD_NE=mftrap(eDistance,-100,-100,-50,0);
+	eD_ZE=mftrap(eDistance,-50,0,0,50);
+	eD_PO=mftrap(eDistance,0,50,100,100);
 
 	double dv_NB=-30;
 	double dv_NM=-20;
@@ -308,9 +308,9 @@ void SetPWM_withDutyCycle(TIM_HandleTypeDef *htim, uint32_t Channel, int dutyCyc
 	int32_t pulse_length = TIM_Period*dutyCycle/100;	//range: 250 - 400 
 	__HAL_TIM_SET_COMPARE(htim, Channel, pulse_length);
 };
-void SetPWM_Forward_Backward(int value, uint16_t leftmotor)
+void SetPWM_Forward_Backward(int value, uint16_t rightmotor)
 {
-	if (leftmotor==1)
+	if (rightmotor==1)
 	{
 		if (value>=50)
 		{
@@ -774,7 +774,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5,GPIO_PIN_SET);
 		HAL_TIM_Base_Start_IT(&htim2);
-		/*
+		
 		//Get data from Raspberrry through SPI
 		HAL_SPI_Receive_DMA(&hspi1,&receivebuffer[0],7);
 		isTracking=receivebuffer[0];
@@ -785,27 +785,28 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			
 				error_Position= (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[1]);
 				error_Distance= (int16_t)(((int16_t)receivebuffer[4]<<8)|(int16_t)receivebuffer[3]);
-			*/	
+			
 				//Calculate distance
 				distance1=echo_sensor1*0.0001*340/2/0.4;
 				distance2=echo_sensor2*0.0001*340/2/0.4;
 				distance3=echo_sensor3*0.0001*340/2/0.4;
 				distance4=echo_sensor4*0.0001*340/2/0.4;	
 				
-				//When there is no obstacle
-				if (distance1>upper_limit_sensor && distance2>upper_limit_sensor && distance3>upper_limit_sensor && distance4>upper_limit_sensor)
-				{
-					current_speed_left=current_speed_left+Defuzzification_Track_L(error_Position,error_Distance);
-					current_speed_right=current_speed_right+Defuzzification_Track_R(error_Position,error_Distance);
-				}
-				//When there is obstacle
-				else
-				{			
-					alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
-					current_speed_left=current_speed_left+Defuzzification_Obstacle_L(alpha,current_speed_left);	
-					current_speed_right=current_speed_right+Defuzzification_Obstacle_R(alpha,current_speed_right);		
-				}
-				
+//				//When there is no obstacle
+//				if (distance1>upper_limit_sensor && distance2>upper_limit_sensor && distance3>upper_limit_sensor && distance4>upper_limit_sensor)
+//				{
+				current_speed_left=current_speed_left+Defuzzification_Track_L(error_Position,error_Distance);
+				current_speed_right=current_speed_right+Defuzzification_Track_R(error_Position,error_Distance);
+//				}
+//				//When there is obstacle
+//				else
+//				{			
+//					alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
+//					current_speed_left=current_speed_left+Defuzzification_Obstacle_L(alpha,current_speed_left);	
+//					current_speed_right=current_speed_right+Defuzzification_Obstacle_R(alpha,current_speed_right);		
+//				}
+//				
+
 				//Scale to range 0->99
 				if (current_speed_left>99) current_speed_left=99;
 				if (current_speed_left<0) current_speed_left=0;
@@ -813,34 +814,36 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 				if (current_speed_right<0) current_speed_right=0;
 				
 				//Control 2 motors
-				SetPWM_Forward_Backward((int)current_speed_left,1);
-				SetPWM_Forward_Backward((int)current_speed_right,0);
+				SetPWM_Forward_Backward((int)current_speed_left,0);
+				SetPWM_Forward_Backward((int)current_speed_right,1);
 		}
-		/*
+		
 		//Cannot find its owner------------------------
 		else
-		{
-			count_spin++;
-			if (count_spin>=100) //after spin 10s ->stop
-			{
-				SetPWM_Forward_Backward((int)50,1);
+//		{
+//			count_spin++;
+//			if (count_spin>=100) //after spin 10s ->stop
+//			{
 				SetPWM_Forward_Backward((int)50,0);
-			}
-			else
-			{				
-				if (alpha>0) //after turn right -> spin left
-				{
-					SetPWM_Forward_Backward((int)0,1);
-					SetPWM_Forward_Backward((int)90,0);
-				}
-				else //after turn left -> spin right
-				{
-					SetPWM_Forward_Backward((int)0,1);
-					SetPWM_Forward_Backward((int)90,0);
-				}
-			}
-		}
-	}*/
+				SetPWM_Forward_Backward((int)50,1);
+//			}
+//			else
+//			{				
+//				if (alpha>0) //after turn right -> spin left
+//				{
+//					SetPWM_Forward_Backward((int)35,0);
+//					SetPWM_Forward_Backward((int)65,1);
+//					
+//				}
+//				else //after turn left -> spin right
+//				{
+//					SetPWM_Forward_Backward((int)35,0);
+//					SetPWM_Forward_Backward((int)65,1);
+//					
+//				}
+//			}
+//		}
+	}
 }
 /* USER CODE END 4 */
 
