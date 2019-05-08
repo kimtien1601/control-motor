@@ -774,7 +774,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5,GPIO_PIN_SET);
 		HAL_TIM_Base_Start_IT(&htim2);
-		
+		/*
 		//Get data from Raspberrry through SPI
 		HAL_SPI_Receive_DMA(&hspi1,&receivebuffer[0],7);
 		isTracking=receivebuffer[0];
@@ -785,7 +785,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			
 				error_Position= (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[1]);
 				error_Distance= (int16_t)(((int16_t)receivebuffer[4]<<8)|(int16_t)receivebuffer[3]);
-				
+			*/	
 				//Calculate distance
 				distance1=echo_sensor1*0.0001*340/2/0.4;
 				distance2=echo_sensor2*0.0001*340/2/0.4;
@@ -816,7 +816,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 				SetPWM_Forward_Backward((int)current_speed_left,1);
 				SetPWM_Forward_Backward((int)current_speed_right,0);
 		}
-		
+		/*
 		//Cannot find its owner------------------------
 		else
 		{
@@ -840,7 +840,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 				}
 			}
 		}
-	}
+	}*/
 }
 /* USER CODE END 4 */
 
