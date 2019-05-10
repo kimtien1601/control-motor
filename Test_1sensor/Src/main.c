@@ -56,7 +56,7 @@ volatile unsigned int echo_sensor1=0, echo_sensor2=0, echo_sensor3=0, echo_senso
 volatile unsigned int en_sensor1=0, en_sensor2=0, en_sensor3=0, en_sensor4=0;
 volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 volatile float alpha=0; 
-volatile double current_speed_left=0, current_speed_right=0;
+volatile double current_speed_left=50, current_speed_right=50;
 unsigned int TIM_Period=399;
 unsigned int upper_limit_sensor=90;
 volatile unsigned int count_spin=0;
@@ -792,20 +792,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 				distance3=echo_sensor3*0.0001*340/2/0.4;
 				distance4=echo_sensor4*0.0001*340/2/0.4;	
 				
-//				//When there is no obstacle
-//				if (distance1>upper_limit_sensor && distance2>upper_limit_sensor && distance3>upper_limit_sensor && distance4>upper_limit_sensor)
-//				{
+				//When there is no obstacle
+				if (distance1>upper_limit_sensor && distance2>upper_limit_sensor && distance3>upper_limit_sensor && distance4>upper_limit_sensor)
+				{
 				current_speed_left=current_speed_left+Defuzzification_Track_L(error_Position,error_Distance);
 				current_speed_right=current_speed_right+Defuzzification_Track_R(error_Position,error_Distance);
-//				}
-//				//When there is obstacle
-//				else
-//				{			
-//					alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
-//					current_speed_left=current_speed_left+Defuzzification_Obstacle_L(alpha,current_speed_left);	
-//					current_speed_right=current_speed_right+Defuzzification_Obstacle_R(alpha,current_speed_right);		
-//				}
-//				
+				}
+				//When there is obstacle
+				else
+				{			
+					alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
+					current_speed_left=current_speed_left+Defuzzification_Obstacle_L(alpha,current_speed_left);	
+					current_speed_right=current_speed_right+Defuzzification_Obstacle_R(alpha,current_speed_right);		
+				}
+				
 
 				//Scale to range 0->99
 				if (current_speed_left>99) current_speed_left=99;
@@ -820,29 +820,29 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		
 		//Cannot find its owner------------------------
 		else
-//		{
-//			count_spin++;
-//			if (count_spin>=100) //after spin 10s ->stop
-//			{
+		{
+			count_spin++;
+			if (count_spin>=100) //after spin 10s ->stop
+			{
 				SetPWM_Forward_Backward((int)50,0);
 				SetPWM_Forward_Backward((int)50,1);
-//			}
-//			else
-//			{				
-//				if (alpha>0) //after turn right -> spin left
-//				{
-//					SetPWM_Forward_Backward((int)35,0);
-//					SetPWM_Forward_Backward((int)65,1);
-//					
-//				}
-//				else //after turn left -> spin right
-//				{
-//					SetPWM_Forward_Backward((int)35,0);
-//					SetPWM_Forward_Backward((int)65,1);
-//					
-//				}
-//			}
-//		}
+			}
+			else
+			{				
+				if (alpha>0) //after turn right -> spin left
+				{
+					SetPWM_Forward_Backward((int)35,0);
+					SetPWM_Forward_Backward((int)65,1);
+					
+				}
+				else //after turn left -> spin right
+				{
+					SetPWM_Forward_Backward((int)35,0);
+					SetPWM_Forward_Backward((int)65,1);
+					
+				}
+			}
+		}
 	}
 }
 /* USER CODE END 4 */
