@@ -59,9 +59,10 @@ volatile float alpha=0;
 volatile double current_speed_left=50, current_speed_right=50;
 unsigned int TIM_Period=399;
 unsigned int upper_limit_sensor=90;
-volatile unsigned int count_spin=0;
+volatile unsigned int count_spin=0,count_lost=0,count_track=0;
 volatile int error_Position=0,error_Distance=0;
 uint8_t receivebuffer[7],isTracking;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -151,11 +152,12 @@ double Defuzzification_Obstacle_L(double alpha,double v)
 double Defuzzification_Track_L(double ePosition,double eDistance)
 {
 	double eP_NB,eP_NS,eP_ZE,eP_PS,eP_PB,eD_NE,eD_ZE,eD_PO;
-	eP_NB=mftrap(ePosition,-180,-180,-140,-80);
-	eP_NS=mftrap(ePosition,-140,-80,-80,0);
-	eP_ZE=mftrap(ePosition,-80,0,0,80);
-	eP_PS=mftrap(ePosition,0,80,80,140);
-	eP_PB=mftrap(ePosition,80,140,180,180);
+	eP_NB=mftrap(ePosition,-180,-180,-100,-50);
+	eP_NS=mftrap(ePosition,-100,-50,-50,0);
+	eP_ZE=mftrap(ePosition,-50,0,0,50);
+	eP_PS=mftrap(ePosition,0,50,50,100);
+	eP_PB=mftrap(ePosition,50,100,180,180);
+
 
 	eD_NE=mftrap(eDistance,-100,-100,-50,0);
 	eD_ZE=mftrap(eDistance,-50,0,0,50);
@@ -253,11 +255,11 @@ double Defuzzification_Obstacle_R(double alpha,double v)
 double Defuzzification_Track_R(double ePosition,double eDistance)
 {
 	double eP_NB,eP_NS,eP_ZE,eP_PS,eP_PB,eD_NE,eD_ZE,eD_PO;
-	eP_NB=mftrap(ePosition,-180,-180,-140,-80);
-	eP_NS=mftrap(ePosition,-140,-80,-80,0);
-	eP_ZE=mftrap(ePosition,-80,0,0,80);
-	eP_PS=mftrap(ePosition,0,80,80,140);
-	eP_PB=mftrap(ePosition,80,140,180,180);
+eP_NB=mftrap(ePosition,-180,-180,-100,-50);
+	eP_NS=mftrap(ePosition,-100,-50,-50,0);
+	eP_ZE=mftrap(ePosition,-50,0,0,50);
+	eP_PS=mftrap(ePosition,0,50,50,100);
+	eP_PB=mftrap(ePosition,50,100,180,180);
 
 	eD_NE=mftrap(eDistance,-100,-100,-50,0);
 	eD_ZE=mftrap(eDistance,-50,0,0,50);
@@ -781,16 +783,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		//if found its owner-----------------------------
 		if (isTracking==1)
 		{
-				count_spin=0; //reset spin counter after lost
-			
+			count_track++;
+			count_lost=0;
+			count_spin=0; //reset spin counter after lost
+		
+			if (count_track>=10)
+			{
 				error_Position= (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[1]);
 				error_Distance= (int16_t)(((int16_t)receivebuffer[4]<<8)|(int16_t)receivebuffer[3]);
 			
 				//Calculate distance
-				distance1=echo_sensor1*0.0001*340/2/0.4;
-				distance2=echo_sensor2*0.0001*340/2/0.4;
-				distance3=echo_sensor3*0.0001*340/2/0.4;
-				distance4=echo_sensor4*0.0001*340/2/0.4;	
+				distance1=echo_sensor1*0.0001*340/2/0.5;
+				distance2=echo_sensor2*0.0001*340/2/0.5;
+				distance3=echo_sensor3*0.0001*340/2/0.5;
+				distance4=echo_sensor4*0.0001*340/2/0.5;	
 				
 				//When there is no obstacle
 				if (distance1>upper_limit_sensor && distance2>upper_limit_sensor && distance3>upper_limit_sensor && distance4>upper_limit_sensor)
@@ -816,31 +822,49 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 				//Control 2 motors
 				SetPWM_Forward_Backward((int)current_speed_left,0);
 				SetPWM_Forward_Backward((int)current_speed_right,1);
+			}
+			
+			else
+			{
+				SetPWM_Forward_Backward((int)50,0);
+				SetPWM_Forward_Backward((int)50,1);
+			}			
 		}
 		
 		//Cannot find its owner------------------------
 		else
 		{
-			count_spin++;
-			if (count_spin>=100) //after spin 10s ->stop
+			count_lost++;
+			if (count_lost>=10)
+			{
+				count_spin++;
+				
+				if (count_spin>=100) //after spin 10s ->stop
+				{
+					SetPWM_Forward_Backward((int)50,0);
+					SetPWM_Forward_Backward((int)50,1);
+				}
+				else
+				{			
+					count_track=0;
+					if (current_speed_left>current_speed_right) //after turn right -> spin left
+					{
+						SetPWM_Forward_Backward((int)25,0);
+						SetPWM_Forward_Backward((int)75,1);
+						
+					}
+					else //after turn left -> spin right
+					{
+						SetPWM_Forward_Backward((int)75,0);
+						SetPWM_Forward_Backward((int)25,1);
+						
+					}
+				}
+			}
+			else
 			{
 				SetPWM_Forward_Backward((int)50,0);
 				SetPWM_Forward_Backward((int)50,1);
-			}
-			else
-			{				
-				if (alpha>0) //after turn right -> spin left
-				{
-					SetPWM_Forward_Backward((int)35,0);
-					SetPWM_Forward_Backward((int)65,1);
-					
-				}
-				else //after turn left -> spin right
-				{
-					SetPWM_Forward_Backward((int)35,0);
-					SetPWM_Forward_Backward((int)65,1);
-					
-				}
 			}
 		}
 	}
