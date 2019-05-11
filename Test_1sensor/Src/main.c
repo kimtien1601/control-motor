@@ -169,12 +169,12 @@ double Defuzzification_Track_L(double ePosition,double eDistance)
 	eD_ZE=mftrap(eDistance,-50,0,0,50);
 	eD_PO=mftrap(eDistance,0,50,100,100);
 
-	double dv_NB=-99;
-	double dv_NM=-88;
-	double dv_NS=-77;
-	double dv_ZE=0;
-	double dv_PS=77;
-	double dv_PM=88;
+	double dv_NB=0;
+	double dv_NM=15;
+	double dv_NS=25;
+	double dv_ZE=50;
+	double dv_PS=75;
+	double dv_PM=85;
 	double dv_PB=99;
 
 	//RULES
@@ -276,12 +276,12 @@ double Defuzzification_Track_R(double ePosition,double eDistance)
 	eD_ZE=mftrap(eDistance,-50,0,0,50);
 	eD_PO=mftrap(eDistance,0,50,100,100);
 
-	double dv_NB=-99;
-	double dv_NM=-88;
-	double dv_NS=-77;
-	double dv_ZE=0;
-	double dv_PS=77;
-	double dv_PM=88;
+	double dv_NB=0;
+	double dv_NM=15;
+	double dv_NS=25;
+	double dv_ZE=50;
+	double dv_PS=75;
+	double dv_PM=85;
 	double dv_PB=99;
 
 	//RULES
