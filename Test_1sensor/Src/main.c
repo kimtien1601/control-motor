@@ -169,13 +169,13 @@ double Defuzzification_Track_L(double ePosition,double eDistance)
 	eD_ZE=mftrap(eDistance,-50,0,0,50);
 	eD_PO=mftrap(eDistance,0,50,100,100);
 
-	double dv_NB=-30;
-	double dv_NM=-20;
-	double dv_NS=-10;
+	double dv_NB=-99;
+	double dv_NM=-88;
+	double dv_NS=-77;
 	double dv_ZE=0;
-	double dv_PS=10;
-	double dv_PM=20;
-	double dv_PB=30;
+	double dv_PS=77;
+	double dv_PM=88;
+	double dv_PB=99;
 
 	//RULES
 	double beta1=eP_NB*eD_NE; //PB
@@ -276,13 +276,13 @@ double Defuzzification_Track_R(double ePosition,double eDistance)
 	eD_ZE=mftrap(eDistance,-50,0,0,50);
 	eD_PO=mftrap(eDistance,0,50,100,100);
 
-	double dv_NB=-30;
-	double dv_NM=-20;
-	double dv_NS=-10;
+	double dv_NB=-99;
+	double dv_NM=-88;
+	double dv_NS=-77;
 	double dv_ZE=0;
-	double dv_PS=10;
-	double dv_PM=20;
-	double dv_PB=30;
+	double dv_PS=77;
+	double dv_PM=88;
+	double dv_PB=99;
 
 	//RULES
 	double beta1=eP_NB*eD_NE; //NS
@@ -812,8 +812,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 				//When there is no obstacle
 //				if (distance1>upper_limit_sensor && distance2>upper_limit_sensor && distance3>upper_limit_sensor && distance4>upper_limit_sensor)
 //				{
-				current_speed_left=current_speed_left+Defuzzification_Track_L(error_Position,error_Distance);
-				current_speed_right=current_speed_right+Defuzzification_Track_R(error_Position,error_Distance);
+				current_speed_left=Defuzzification_Track_L(error_Position,error_Distance);
+				current_speed_right=Defuzzification_Track_R(error_Position,error_Distance);
 //				}
 				//When there is obstacle
 //				else

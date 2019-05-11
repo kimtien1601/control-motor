@@ -80,7 +80,7 @@
     <sActiveDebugView></sActiveDebugView>
     <WindowPosition>
       <length>44</length>
-      <flags>2</flags>
+      <flags>0</flags>
       <showCmd>1</showCmd>
       <MinPosition>
         <xPos>-32000</xPos>
@@ -1855,11 +1855,11 @@
       <ActiveTab>0</ActiveTab>
       <Doc>
         <Name>../Src/main.c</Name>
-        <ColumnNumber>11</ColumnNumber>
-        <TopLine>749</TopLine>
-        <CurrentLine>817</CurrentLine>
+        <ColumnNumber>18</ColumnNumber>
+        <TopLine>457</TopLine>
+        <CurrentLine>285</CurrentLine>
         <Folding>1</Folding>
-        <ContractedFolders>78,94,211</ContractedFolders>
+        <ContractedFolders>78,94,101,211</ContractedFolders>
         <PaneID>0</PaneID>
       </Doc>
       <Doc>
