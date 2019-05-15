@@ -111,13 +111,13 @@ double Defuzzification_Obstacle_L(double alpha,double v)
 	v_ME=mftrap(v,60,75,75,90);
 	v_HI=mftrap(v,75,90,100,100);
 
-	double dv_NB=-30;
-	double dv_NM=-20;
-	double dv_NS=-10;
+	double dv_NB=-90;
+	double dv_NM=-60;
+	double dv_NS=-30;
 	double dv_ZE=0;
-	double dv_PS=10;
-	double dv_PM=20;
-	double dv_PB=30;
+	double dv_PS=20;
+	double dv_PM=40;
+	double dv_PB=60;
 
 	//RULES
 	double beta1=alpha_NB*v_LO; //PB
@@ -158,11 +158,11 @@ double Defuzzification_Track_L(double ePosition,double eDistance)
 //	eP_PS=mftrap(ePosition,0,50,50,100);
 //	eP_PB=mftrap(ePosition,50,100,180,180);
 	
-	eP_NB=mftrap(ePosition,-180,-180,-140,-100);
-	eP_NS=mftrap(ePosition,-140,-70,-70,0);
-	eP_ZE=mftrap(ePosition,-70,0,0,70);
-	eP_PS=mftrap(ePosition,0,70,70,140);
-	eP_PB=mftrap(ePosition,70,140,180,180);
+	eP_NB=mftrap(ePosition,-180,-180,-150,-120);
+	eP_NS=mftrap(ePosition,-150,-120,-120,0);
+	eP_ZE=mftrap(ePosition,-120,0,0,120);
+	eP_PS=mftrap(ePosition,0,120,120,150);
+	eP_PB=mftrap(ePosition,120,150,180,180);
 
 
 	eD_NE=mftrap(eDistance,-100,-100,-50,0);
@@ -173,9 +173,9 @@ double Defuzzification_Track_L(double ePosition,double eDistance)
 	double dv_NM=-20;
 	double dv_NS=-10;
 	double dv_ZE=0;
-	double dv_PS=10;
-	double dv_PM=20;
-	double dv_PB=30;
+	double dv_PS=20;
+	double dv_PM=40;
+	double dv_PB=60;
 
 	//RULES
 	double beta1=eP_NB*eD_NE; //PB
@@ -221,13 +221,13 @@ double Defuzzification_Obstacle_R(double alpha,double v)
 	v_ME=mftrap(v,60,75,75,90);
 	v_HI=mftrap(v,75,90,100,100);
 
-	double dv_NB=-30;
-	double dv_NM=-20;
-	double dv_NS=-10;
+	double dv_NB=-90;
+	double dv_NM=-60;
+	double dv_NS=-30;
 	double dv_ZE=0;
-	double dv_PS=10;
-	double dv_PM=20;
-	double dv_PB=30;
+	double dv_PS=20;
+	double dv_PM=40;
+	double dv_PB=60;
 
 	//RULES
 	double beta1=alpha_NB*v_LO; //NS
@@ -266,12 +266,12 @@ double Defuzzification_Track_R(double ePosition,double eDistance)
 //	eP_ZE=mftrap(ePosition,-50,0,0,50);
 //	eP_PS=mftrap(ePosition,0,50,50,100);
 //	eP_PB=mftrap(ePosition,50,100,180,180);
-	eP_NB=mftrap(ePosition,-180,-180,-140,-100);
-	eP_NS=mftrap(ePosition,-140,-70,-70,0);
-	eP_ZE=mftrap(ePosition,-70,0,0,70);
-	eP_PS=mftrap(ePosition,0,70,70,140);
-	eP_PB=mftrap(ePosition,70,140,180,180);
-
+	eP_NB=mftrap(ePosition,-180,-180,-150,-120);
+	eP_NS=mftrap(ePosition,-150,-120,-120,0);
+	eP_ZE=mftrap(ePosition,-120,0,0,120);
+	eP_PS=mftrap(ePosition,0,120,120,150);
+	eP_PB=mftrap(ePosition,120,150,180,180);
+	
 	eD_NE=mftrap(eDistance,-100,-100,-50,0);
 	eD_ZE=mftrap(eDistance,-50,0,0,50);
 	eD_PO=mftrap(eDistance,0,50,100,100);
@@ -280,9 +280,9 @@ double Defuzzification_Track_R(double ePosition,double eDistance)
 	double dv_NM=-20;
 	double dv_NS=-10;
 	double dv_ZE=0;
-	double dv_PS=10;
-	double dv_PM=20;
-	double dv_PB=30;
+	double dv_PS=20;
+	double dv_PM=40;
+	double dv_PB=60;
 
 	//RULES
 	double beta1=eP_NB*eD_NE; //NS
@@ -850,7 +850,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			{
 				count_spin++;
 				
-				if (count_spin>=200) //after spin 10s ->stop
+				if (count_spin>=200) //after spin 20s ->stop
 				{
 					SetPWM_Forward_Backward((int)50,0);
 					SetPWM_Forward_Backward((int)50,1);
