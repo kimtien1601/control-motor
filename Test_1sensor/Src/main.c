@@ -158,24 +158,23 @@ double Defuzzification_Track_L(double ePosition,double eDistance)
 //	eP_PS=mftrap(ePosition,0,50,50,100);
 //	eP_PB=mftrap(ePosition,50,100,180,180);
 	
-	eP_NB=mftrap(ePosition,-180,-180,-150,-120);
-	eP_NS=mftrap(ePosition,-150,-120,-120,0);
-	eP_ZE=mftrap(ePosition,-120,0,0,120);
-	eP_PS=mftrap(ePosition,0,120,120,150);
-	eP_PB=mftrap(ePosition,120,150,180,180);
-
+	eP_NB=mftrap(ePosition,-180,-180,-150,-130);
+	eP_NS=mftrap(ePosition,-150,-130,-130,0);
+	eP_ZE=mftrap(ePosition,-130,0,0,130);
+	eP_PS=mftrap(ePosition,0,130,130,150);
+	eP_PB=mftrap(ePosition,130,150,180,180);
 
 	eD_NE=mftrap(eDistance,-100,-100,-50,0);
 	eD_ZE=mftrap(eDistance,-50,0,0,50);
 	eD_PO=mftrap(eDistance,0,50,100,100);
 
-	double dv_NB=-30;
-	double dv_NM=-20;
-	double dv_NS=-10;
+	double dv_NB=-6;
+	double dv_NM=-4;
+	double dv_NS=-2;
 	double dv_ZE=0;
-	double dv_PS=20;
-	double dv_PM=40;
-	double dv_PB=60;
+	double dv_PS=4;
+	double dv_PM=8;
+	double dv_PB=12;
 
 	//RULES
 	double beta1=eP_NB*eD_NE; //PB
@@ -266,23 +265,23 @@ double Defuzzification_Track_R(double ePosition,double eDistance)
 //	eP_ZE=mftrap(ePosition,-50,0,0,50);
 //	eP_PS=mftrap(ePosition,0,50,50,100);
 //	eP_PB=mftrap(ePosition,50,100,180,180);
-	eP_NB=mftrap(ePosition,-180,-180,-150,-120);
-	eP_NS=mftrap(ePosition,-150,-120,-120,0);
-	eP_ZE=mftrap(ePosition,-120,0,0,120);
-	eP_PS=mftrap(ePosition,0,120,120,150);
-	eP_PB=mftrap(ePosition,120,150,180,180);
+	eP_NB=mftrap(ePosition,-180,-180,-150,-130);
+	eP_NS=mftrap(ePosition,-150,-130,-130,0);
+	eP_ZE=mftrap(ePosition,-130,0,0,130);
+	eP_PS=mftrap(ePosition,0,130,130,150);
+	eP_PB=mftrap(ePosition,130,150,180,180);
 	
 	eD_NE=mftrap(eDistance,-100,-100,-50,0);
 	eD_ZE=mftrap(eDistance,-50,0,0,50);
 	eD_PO=mftrap(eDistance,0,50,100,100);
 
-	double dv_NB=-30;
-	double dv_NM=-20;
-	double dv_NS=-10;
+	double dv_NB=-6;
+	double dv_NM=-4;
+	double dv_NS=-2;
 	double dv_ZE=0;
-	double dv_PS=20;
-	double dv_PM=40;
-	double dv_PB=60;
+	double dv_PS=4;
+	double dv_PM=8;
+	double dv_PB=12;
 
 	//RULES
 	double beta1=eP_NB*eD_NE; //NS
@@ -822,7 +821,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 //					current_speed_left=current_speed_left+Defuzzification_Obstacle_L(alpha,current_speed_left);	
 //					current_speed_right=current_speed_right+Defuzzification_Obstacle_R(alpha,current_speed_right);		
 //				}
-				
+				if (abs(error_Position)<10 && abs(error_Distance)<10)
+				{
+					current_speed_left=50;
+					current_speed_right=50;
+				}
 
 				//Scale to range 0->99
 				if (current_speed_left>99) current_speed_left=99;
@@ -845,6 +848,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		//Cannot find its owner------------------------
 		else
 		{
+			current_speed_left=50;
+			current_speed_right=50;
 			count_lost++;
 			if (count_lost>=10)
 			{
