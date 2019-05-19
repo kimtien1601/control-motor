@@ -215,6 +215,7 @@ void SysTick_Handler(void)
 void EXTI1_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI1_IRQn 0 */
+	
 	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1))
 	{
 		en_sensor1=1;
@@ -225,6 +226,7 @@ void EXTI1_IRQHandler(void)
 		echo_sensor1=time_sensor1;
 		en_sensor1=0;
 	}
+	
   /* USER CODE END EXTI1_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
   /* USER CODE BEGIN EXTI1_IRQn 1 */
@@ -308,11 +310,13 @@ void EXTI9_5_IRQHandler(void)
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
+	
 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_1,GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_3,GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_4,GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_5,GPIO_PIN_RESET);
 	HAL_TIM_Base_Stop_IT(&htim2);
+	
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
@@ -357,7 +361,9 @@ void TIM3_IRQHandler(void)
 void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
+	
 	if (en_sensor1==1) time_sensor1++;
+	
 	if (en_sensor2==1) time_sensor2++;
 	if (en_sensor3==1) time_sensor3++;
 	if (en_sensor4==1) time_sensor4++;

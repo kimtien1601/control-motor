@@ -1,0 +1,59 @@
+[System]
+Name='right_track_v'
+Type='sugeno'
+Version=2.0
+NumInputs=2
+NumOutputs=1
+NumRules=15
+AndMethod='prod'
+OrMethod='probor'
+ImpMethod='prod'
+AggMethod='sum'
+DefuzzMethod='wtaver'
+
+[Input1]
+Name='alpha'
+Range=[-180 180]
+NumMFs=5
+MF1='NB':'trapmf',[-180 -180 -140 -70]
+MF2='ZE':'trimf',[-70 0 70]
+MF3='PB':'trapmf',[70 140 180 180]
+MF4='NM':'trimf',[-140 -70 0]
+MF5='PS':'trimf',[0 70 140]
+
+[Input2]
+Name='v'
+Range=[-100 100]
+NumMFs=3
+MF1='LO':'trapmf',[-100 -100 -10 0]
+MF2='ME':'trimf',[-10 0 10]
+MF3='HI':'trapmf',[0 10 100 100]
+
+[Output1]
+Name='dv'
+Range=[0 1]
+NumMFs=7
+MF1='NB':'constant',[0]
+MF2='NM':'constant',[15]
+MF3='NS':'constant',[30]
+MF4='ZE':'constant',[50]
+MF5='PS':'constant',[85]
+MF6='PM':'constant',[90]
+MF7='PB':'constant',[99]
+
+[Rules]
+1 1, 3 (1) : 1
+1 2, 2 (1) : 1
+1 3, 1 (1) : 1
+4 1, 4 (1) : 1
+4 2, 3 (1) : 1
+4 3, 2 (1) : 1
+2 1, 5 (1) : 1
+2 2, 4 (1) : 1
+2 3, 3 (1) : 1
+5 1, 6 (1) : 1
+5 2, 5 (1) : 1
+5 3, 4 (1) : 1
+3 1, 7 (1) : 1
+3 2, 6 (1) : 1
+3 3, 5 (1) : 1
