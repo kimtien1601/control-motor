@@ -58,7 +58,7 @@ volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 volatile float alpha=0; 
 volatile double current_speed_left=0, current_speed_right=0;
 unsigned int TIM_Period=399;
-unsigned int upper_limit_sensor=80;
+unsigned int upper_limit_sensor=15;
 volatile unsigned int count_spin=0,count_lost=0,count_track=0;
 volatile int error_Position=0,error_Distance=0;
 uint8_t receivebuffer[7],isTracking;
@@ -102,24 +102,24 @@ double max(double num1, double num2)
 double Defuzzification_Obstacle_L(double alpha,double v)
 {
 	double alpha_NB,alpha_NS,alpha_ZE,alpha_PS,alpha_PB,v_LO,v_ME,v_HI;
-	alpha_NB=mftrap(alpha,-60,-60,-45,-30);
-	alpha_NS=mftrap(alpha,-45,-30,-30,0);
-	alpha_ZE=mftrap(alpha,-30,0,0,30);
-	alpha_PS=mftrap(alpha,0,30,30,45);
-	alpha_PB=mftrap(alpha,30,45,60,60);
-
-	v_LO=mftrap(v,-100,-100,-70,0);
-	v_ME=mftrap(v,-70,0,0,70);
-	v_HI=mftrap(v,0,70,100,100);
-
-	double dv_NB=-90;
-	double dv_NM=-60;
+	alpha_NB=mftrap(alpha,-60,-60,-40,-20);
+	alpha_NS=mftrap(alpha,-40,-20,-20,0);
+	alpha_ZE=mftrap(alpha,-20,0,0,20);
+	alpha_PS=mftrap(alpha,0,20,20,40);
+	alpha_PB=mftrap(alpha,20,40,60,60);
+	
+	v_LO=mftrap(v,-100,-100,60,75);
+	v_ME=mftrap(v,60,75,75,90);
+	v_HI=mftrap(v,75,90,100,100);
+	
+	double dv_NB=-180;
+	double dv_NM=-105;
 	double dv_NS=-30;
 	double dv_ZE=0;
 	double dv_PS=20;
-	double dv_PM=40;
-	double dv_PB=60;
-
+	double dv_PM=70;
+	double dv_PB=120;
+	
 	//RULES
 	double beta1=alpha_NB*v_LO; //PB
 	double beta2=alpha_NB*v_ME; //PM
@@ -211,23 +211,23 @@ double Defuzzification_Track_L(double ePosition,double eDistance)
 double Defuzzification_Obstacle_R(double alpha,double v)
 {
 	double alpha_NB,alpha_NS,alpha_ZE,alpha_PS,alpha_PB,v_LO,v_ME,v_HI;
-	alpha_NB=mftrap(alpha,-60,-60,-45,-30);
-	alpha_NS=mftrap(alpha,-45,-30,-30,0);
-	alpha_ZE=mftrap(alpha,-30,0,0,30);
-	alpha_PS=mftrap(alpha,0,30,30,45);
-	alpha_PB=mftrap(alpha,30,45,60,60);
-
-	v_LO=mftrap(v,-100,-100,-70,0);
-	v_ME=mftrap(v,-70,0,0,70);
-	v_HI=mftrap(v,0,70,100,100);
-
-	double dv_NB=-90;
-	double dv_NM=-60;
+	alpha_NB=mftrap(alpha,-60,-60,-40,-20);
+	alpha_NS=mftrap(alpha,-40,-20,-20,0);
+	alpha_ZE=mftrap(alpha,-20,0,0,20);
+	alpha_PS=mftrap(alpha,0,20,20,40);
+	alpha_PB=mftrap(alpha,20,40,60,60);
+	
+	v_LO=mftrap(v,-100,-100,60,75);
+	v_ME=mftrap(v,60,75,75,90);
+	v_HI=mftrap(v,75,90,100,100);
+	
+	double dv_NB=-180;
+	double dv_NM=-105;
 	double dv_NS=-30;
 	double dv_ZE=0;
 	double dv_PS=20;
-	double dv_PM=40;
-	double dv_PB=60;
+	double dv_PM=70;
+	double dv_PB=120;
 
 	//RULES
 	double beta1=alpha_NB*v_LO; //NS
@@ -356,8 +356,9 @@ void SetPWM_Forward_Backward(int value, uint16_t rightmotor)
 }
 int scale(int x)
 {
-	if (x>0) return (int)((35*x+6500)/100);
-	else return (int)((35*x-6500)/100);
+//	if (x>0) return (int)((35*x+6500)/100);
+//	else return (int)((35*x-6500)/100);
+	return (int)((35*x+6500)/100);
 }
 
 /* USER CODE END PFP */
@@ -818,44 +819,56 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			if (count_track>=10)
 			{
 				//Calculate distance
-				distance1=echo_sensor1*0.0001*340/2/0.5;
+				distance1=echo_sensor1*0.0001*340/2;
 				
-				distance2=echo_sensor2*0.0001*340/2/0.5;
-				distance3=echo_sensor3*0.0001*340/2/0.5;
-				distance4=echo_sensor4*0.0001*340/2/0.5;	
+				distance2=echo_sensor2*0.0001*340/2;
+				distance3=echo_sensor3*0.0001*340/2;
+				distance4=echo_sensor4*0.0001*340/2;	
 				
+				if (distance4>60) distance4=distance1;
 				//When there is no obstacle
-//				if (distance1>upper_limit_sensor && distance2>upper_limit_sensor && distance3>upper_limit_sensor && distance4>upper_limit_sensor)
-//				{
-				alpha=0;
-				current_speed_left=current_speed_left+Defuzzification_Track_L(error_Position,error_Distance);
-				current_speed_right=current_speed_right+Defuzzification_Track_R(error_Position,error_Distance);
-//				}
+				if (distance1>upper_limit_sensor && distance2>upper_limit_sensor && distance3>upper_limit_sensor && distance4>upper_limit_sensor)
+				{
+					alpha=0;
+					current_speed_left=current_speed_left+Defuzzification_Track_L(error_Position,error_Distance);
+					current_speed_right=current_speed_right+Defuzzification_Track_R(error_Position,error_Distance);
+//					current_speed_left=scale(current_speed_left);
+//					current_speed_right=scale(current_speed_right);
+					pwm_L=scale(current_speed_left);
+					pwm_R=scale(current_speed_right);
+				}
 				
 				//When there is obstacle
-//				else
-//				{			
-//					alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
-//					current_speed_left=current_speed_left+Defuzzification_Obstacle_L(alpha,current_speed_left);	
-//					current_speed_right=current_speed_right+Defuzzification_Obstacle_R(alpha,current_speed_right);		
-//				}				
+				else
+				{		
+					alpha=(-distance1*60-distance2*30+distance3*30+distance4*60)/(distance1+distance2+distance3+distance4);
+					current_speed_left=current_speed_left+Defuzzification_Obstacle_L(alpha,current_speed_left);	
+					current_speed_right=current_speed_right+Defuzzification_Obstacle_R(alpha,current_speed_right);
+					if (distance1>50 && distance2<upper_limit_sensor && distance3<upper_limit_sensor && distance4>50)
+						alpha=60;
+					pwm_L=current_speed_left;
+					pwm_R=current_speed_right;
+				}				
 				
-//				pwm_L=scale(current_speed_left);
-//				pwm_R=scale(current_speed_right);
 
-				
 				if (abs(error_Position)<10 && abs(error_Distance)<10)
 				{
+//					current_speed_left=0;
+//					current_speed_right=0;
 					pwm_L=0;
 					pwm_R=0;
 				}
 
 				//Scale to range 0->99
+//				if (current_speed_left>99) current_speed_left=99;
+//				if (current_speed_left<-99) current_speed_left=-99;
+//				if (current_speed_right>99) current_speed_right=99;
+//				if (current_speed_right<-99) current_speed_right=-99;
 				if (pwm_L>99) pwm_L=99;
 				if (pwm_L<-99) pwm_L=-99;
 				if (pwm_R>99) pwm_R=99;
 				if (pwm_R<-99) pwm_R=-99;
-				
+					
 				//Control 2 motors
 				SetPWM_Forward_Backward((int)pwm_L,0);
 				SetPWM_Forward_Backward((int)pwm_R,1);
