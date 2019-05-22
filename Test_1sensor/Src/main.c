@@ -58,7 +58,7 @@ volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 volatile float alpha=0; 
 volatile double current_speed_left=0, current_speed_right=0;
 unsigned int TIM_Period=399;
-unsigned int upper_limit_sensor=15;
+unsigned int upper_limit_sensor=1;
 volatile unsigned int count_spin=0,count_lost=0,count_track=0;
 volatile int error_Position=0,error_Distance=0;
 uint8_t receivebuffer[7],isTracking;
@@ -102,19 +102,19 @@ double max(double num1, double num2)
 double Defuzzification_Obstacle_L(double alpha,double v)
 {
 	double alpha_NB,alpha_NS,alpha_ZE,alpha_PS,alpha_PB,v_LO,v_ME,v_HI;
-	alpha_NB=mftrap(alpha,-60,-60,-40,-20);
-	alpha_NS=mftrap(alpha,-40,-20,-20,0);
-	alpha_ZE=mftrap(alpha,-20,0,0,20);
-	alpha_PS=mftrap(alpha,0,20,20,40);
-	alpha_PB=mftrap(alpha,20,40,60,60);
+	alpha_NB=mftrap(alpha,-60,-60,-40,-15);
+	alpha_NS=mftrap(alpha,-40,-15,-15,0);
+	alpha_ZE=mftrap(alpha,-15,0,0,15);
+	alpha_PS=mftrap(alpha,0,15,15,40);
+	alpha_PB=mftrap(alpha,15,40,60,60);
 	
 	v_LO=mftrap(v,-100,-100,60,75);
 	v_ME=mftrap(v,60,75,75,90);
 	v_HI=mftrap(v,75,90,100,100);
 	
 	double dv_NB=-180;
-	double dv_NM=-105;
-	double dv_NS=-30;
+	double dv_NM=-110;
+	double dv_NS=-40;
 	double dv_ZE=0;
 	double dv_PS=20;
 	double dv_PM=70;
@@ -159,11 +159,11 @@ double Defuzzification_Track_L(double ePosition,double eDistance)
 //	eP_PS=mftrap(ePosition,0,50,50,100);
 //	eP_PB=mftrap(ePosition,50,100,180,180);
 	
-	eP_NB=mftrap(ePosition,-180,-180,-150,-130);
-	eP_NS=mftrap(ePosition,-150,-130,-130,0);
-	eP_ZE=mftrap(ePosition,-130,0,0,130);
-	eP_PS=mftrap(ePosition,0,130,130,150);
-	eP_PB=mftrap(ePosition,130,150,180,180);
+	eP_NB=mftrap(ePosition,-180,-180,-150,-120);
+	eP_NS=mftrap(ePosition,-150,-120,-120,0);
+	eP_ZE=mftrap(ePosition,-120,0,0,120);
+	eP_PS=mftrap(ePosition,0,120,120,150);
+	eP_PB=mftrap(ePosition,120,150,180,180);
 
 	eD_NE=mftrap(eDistance,-100,-100,-50,0);
 	eD_ZE=mftrap(eDistance,-50,0,0,50);
@@ -211,19 +211,19 @@ double Defuzzification_Track_L(double ePosition,double eDistance)
 double Defuzzification_Obstacle_R(double alpha,double v)
 {
 	double alpha_NB,alpha_NS,alpha_ZE,alpha_PS,alpha_PB,v_LO,v_ME,v_HI;
-	alpha_NB=mftrap(alpha,-60,-60,-40,-20);
-	alpha_NS=mftrap(alpha,-40,-20,-20,0);
-	alpha_ZE=mftrap(alpha,-20,0,0,20);
-	alpha_PS=mftrap(alpha,0,20,20,40);
-	alpha_PB=mftrap(alpha,20,40,60,60);
+	alpha_NB=mftrap(alpha,-60,-60,-40,-15);
+	alpha_NS=mftrap(alpha,-40,-15,-15,0);
+	alpha_ZE=mftrap(alpha,-15,0,0,15);
+	alpha_PS=mftrap(alpha,0,15,15,40);
+	alpha_PB=mftrap(alpha,15,40,60,60);
 	
 	v_LO=mftrap(v,-100,-100,60,75);
 	v_ME=mftrap(v,60,75,75,90);
 	v_HI=mftrap(v,75,90,100,100);
 	
 	double dv_NB=-180;
-	double dv_NM=-105;
-	double dv_NS=-30;
+	double dv_NM=-110;
+	double dv_NS=-40;
 	double dv_ZE=0;
 	double dv_PS=20;
 	double dv_PM=70;
@@ -261,11 +261,11 @@ double Defuzzification_Obstacle_R(double alpha,double v)
 double Defuzzification_Track_R(double ePosition,double eDistance)
 {
 	double eP_NB,eP_NS,eP_ZE,eP_PS,eP_PB,eD_NE,eD_ZE,eD_PO;
-	eP_NB=mftrap(ePosition,-180,-180,-150,-130);
-	eP_NS=mftrap(ePosition,-150,-130,-130,0);
-	eP_ZE=mftrap(ePosition,-130,0,0,130);
-	eP_PS=mftrap(ePosition,0,130,130,150);
-	eP_PB=mftrap(ePosition,130,150,180,180);
+	eP_NB=mftrap(ePosition,-180,-180,-150,-120);
+	eP_NS=mftrap(ePosition,-150,-120,-120,0);
+	eP_ZE=mftrap(ePosition,-120,0,0,120);
+	eP_PS=mftrap(ePosition,0,120,120,150);
+	eP_PB=mftrap(ePosition,120,150,180,180);
 	
 	eD_NE=mftrap(eDistance,-100,-100,-50,0);
 	eD_ZE=mftrap(eDistance,-50,0,0,50);
@@ -827,7 +827,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 				
 				if (distance4>60) distance4=distance1;
 				//When there is no obstacle
-				if (distance1>upper_limit_sensor && distance2>upper_limit_sensor && distance3>upper_limit_sensor && distance4>upper_limit_sensor)
+				if (distance1>upper_limit_sensor && distance2>upper_limit_sensor+10 && distance3>upper_limit_sensor+10 && distance4>upper_limit_sensor)
 				{
 					alpha=0;
 					current_speed_left=current_speed_left+Defuzzification_Track_L(error_Position,error_Distance);
@@ -849,8 +849,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 					pwm_L=current_speed_left;
 					pwm_R=current_speed_right;
 				}				
-				
-
 				if (abs(error_Position)<10 && abs(error_Distance)<10)
 				{
 //					current_speed_left=0;
@@ -906,8 +904,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 					else //after turn left -> spin right
 					{
 						SetPWM_Forward_Backward((int)70,0);
-						SetPWM_Forward_Backward((int)-70,1);
-						
+						SetPWM_Forward_Backward((int)-70,1);						
 					}
 				}
 			}

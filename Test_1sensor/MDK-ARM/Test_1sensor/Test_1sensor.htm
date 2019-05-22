@@ -3,7 +3,7 @@
 <title>Static Call Graph - [Test_1sensor\Test_1sensor.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image Test_1sensor\Test_1sensor.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Wed May 22 14:03:43 2019
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Wed May 22 15:06:45 2019
 <BR><P>
 <H3>Maximum Stack Usage =        488 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -591,8 +591,8 @@ Global Symbols
 <P><STRONG><a name="[7]"></a>DebugMon_Handler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_it.o(i.DebugMon_Handler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
-<P><STRONG><a name="[7b]"></a>Defuzzification_Obstacle_L</STRONG> (Thumb, 1256 bytes, Stack size 272 bytes, main.o(i.Defuzzification_Obstacle_L))
-<BR><BR>[Stack]<UL><LI>Max Depth = 416<LI>Call Chain = Defuzzification_Obstacle_L &rArr; mftrap &rArr; __aeabi_dsub &rArr; __aeabi_dadd &rArr; _double_epilogue &rArr; _double_round
+<P><STRONG><a name="[7b]"></a>Defuzzification_Obstacle_L</STRONG> (Thumb, 1264 bytes, Stack size 224 bytes, main.o(i.Defuzzification_Obstacle_L))
+<BR><BR>[Stack]<UL><LI>Max Depth = 368<LI>Call Chain = Defuzzification_Obstacle_L &rArr; mftrap &rArr; __aeabi_dsub &rArr; __aeabi_dadd &rArr; _double_epilogue &rArr; _double_round
 </UL>
 <BR>[Calls]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_dmul
 <LI><a href="#[73]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_ddiv
@@ -603,7 +603,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_PeriodElapsedCallback
 </UL>
 
-<P><STRONG><a name="[7e]"></a>Defuzzification_Obstacle_R</STRONG> (Thumb, 1248 bytes, Stack size 272 bytes, main.o(i.Defuzzification_Obstacle_R))
+<P><STRONG><a name="[7e]"></a>Defuzzification_Obstacle_R</STRONG> (Thumb, 1256 bytes, Stack size 272 bytes, main.o(i.Defuzzification_Obstacle_R))
 <BR><BR>[Stack]<UL><LI>Max Depth = 416<LI>Call Chain = Defuzzification_Obstacle_R &rArr; mftrap &rArr; __aeabi_dsub &rArr; __aeabi_dadd &rArr; _double_epilogue &rArr; _double_round
 </UL>
 <BR>[Calls]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_dmul
@@ -1044,7 +1044,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[ab]"></a>HAL_TIM_PeriodElapsedCallback</STRONG> (Thumb, 1140 bytes, Stack size 48 bytes, main.o(i.HAL_TIM_PeriodElapsedCallback))
+<P><STRONG><a name="[ab]"></a>HAL_TIM_PeriodElapsedCallback</STRONG> (Thumb, 1158 bytes, Stack size 48 bytes, main.o(i.HAL_TIM_PeriodElapsedCallback))
 <BR><BR>[Stack]<UL><LI>Max Depth = 464<LI>Call Chain = HAL_TIM_PeriodElapsedCallback &rArr; Defuzzification_Track_R &rArr; mftrap &rArr; __aeabi_dsub &rArr; __aeabi_dadd &rArr; _double_epilogue &rArr; _double_round
 </UL>
 <BR>[Calls]<UL><LI><a href="#[75]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_ui2d
